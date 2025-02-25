@@ -1,0 +1,255 @@
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
+using BookDomain.Model;
+
+namespace BookInfrastructure;
+
+public partial class BooksShopdatabaseContext : DbContext
+{
+    public BooksShopdatabaseContext()
+    {
+    }
+
+    public BooksShopdatabaseContext(DbContextOptions<BooksShopdatabaseContext> options)
+        : base(options)
+    {
+    }
+
+    public virtual DbSet<Book> Books { get; set; }
+
+    public virtual DbSet<Category> Categories { get; set; }
+
+    public virtual DbSet<Customer> Customers { get; set; }
+
+    public virtual DbSet<Order> Orders { get; set; }
+
+    public virtual DbSet<OrderDetail> OrderDetails { get; set; }
+
+    public virtual DbSet<Payment> Payments { get; set; }
+
+    public virtual DbSet<ShoppingBasket> ShoppingBaskets { get; set; }
+
+    public virtual DbSet<ShoppingBasketBook> ShoppingBasketBooks { get; set; }
+
+    public virtual DbSet<WarehouseBook> WarehouseBooks { get; set; }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseSqlServer("Server=LAPTOP-35O34RUH\\SQLEXPRESS; Database=BooksShopdatabase; Trusted_Connection=True; TrustServerCertificate=True; ");
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Book>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__Book__447D36EB06A970C8");
+
+            entity.ToTable("Book");
+
+            entity.Property(e => e.Id)
+                .ValueGeneratedNever()
+                .HasColumnName("id");
+            entity.Property(e => e.Genre)
+                .HasMaxLength(255)
+                .HasColumnName("authorAddress");
+            entity.Property(e => e.AuthorName)
+                .HasMaxLength(255)
+                .HasColumnName("authorName");
+            entity.Property(e => e.Price)
+                .HasColumnType("decimal(18, 0)")
+                .HasColumnName("price");
+            entity.Property(e => e.Name)
+                .HasMaxLength(255)
+                .HasColumnName("publisherName");
+            entity.Property(e => e.Description)
+                .HasMaxLength(255)
+                .HasColumnName("title");
+            entity.Property(e => e.Year).HasColumnName("year");
+        });
+
+        modelBuilder.Entity<Category>(entity =>
+        {
+            entity.ToTable("Category");
+
+            entity.HasIndex(e => e.BookId, "IX_Category");
+
+            entity.Property(e => e.Id)
+                .ValueGeneratedNever()
+                .HasColumnName("categoryId");
+            entity.Property(e => e.BookId).HasColumnName("bookId");
+            entity.Property(e => e.CategoryName)
+                .HasMaxLength(255)
+                .HasColumnName("categoryName");
+            entity.Property(e => e.Description)
+                .HasColumnType("text")
+                .HasColumnName("description");
+
+            entity.HasOne(d => d.Book).WithMany(p => p.Categories)
+                .HasForeignKey(d => d.BookId)
+                .HasConstraintName("FK_Category_Book");
+        });
+
+        modelBuilder.Entity<Customer>(entity =>
+        {
+            entity.HasKey(e => e.Email).HasName("PK__Customer__A9D1053550F16F36");
+
+            entity.ToTable("Customer");
+
+            entity.Property(e => e.Email)
+                .HasMaxLength(255)
+                .HasColumnName("email");
+            entity.Property(e => e.Address)
+                .HasColumnType("text")
+                .HasColumnName("address");
+            entity.Property(e => e.Name)
+                .HasMaxLength(255)
+                .HasColumnName("name");
+            entity.Property(e => e.Phone).HasColumnName("phone");
+        });
+
+        modelBuilder.Entity<Order>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__Order__4659622912A5D1BD");
+
+            entity.ToTable("Order");
+
+            entity.Property(e => e.Id)
+                .ValueGeneratedNever()
+                .HasColumnName("orderId");
+            entity.Property(e => e.CustomerEmail)
+                .HasMaxLength(255)
+                .HasColumnName("customerEmail");
+            entity.Property(e => e.DeliveryAddress)
+                .HasColumnType("text")
+                .HasColumnName("deliveryAddress");
+            entity.Property(e => e.OrderDate).HasColumnName("orderDate");
+            entity.Property(e => e.OrderStatus)
+                .HasMaxLength(255)
+                .HasColumnName("orderStatus");
+            entity.Property(e => e.Price)
+                .HasColumnType("decimal(18, 0)")
+                .HasColumnName("price");
+            entity.Property(e => e.ShoppingBasketId).HasColumnName("shoppingBasketId");
+            entity.Property(e => e.TotalPrice)
+                .HasColumnType("decimal(18, 0)")
+                .HasColumnName("totalPrice");
+
+            entity.HasOne(d => d.CustomerEmailNavigation).WithMany(p => p.Orders)
+                .HasForeignKey(d => d.CustomerEmail)
+                .HasConstraintName("FK__Order__customer___44FF419A");
+        });
+
+        modelBuilder.Entity<OrderDetail>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_Order Details");
+
+            entity.Property(e => e.Id)
+                .ValueGeneratedNever()
+                .HasColumnName("id");
+            entity.Property(e => e.BookId).HasColumnName("bookId");
+            entity.Property(e => e.Id).HasColumnName("orderId");
+            entity.Property(e => e.Quantity).HasColumnName("quantity");
+            entity.Property(e => e.StatusId).HasColumnName("statusId");
+
+            entity.HasOne(d => d.Book).WithMany(p => p.OrderDetails)
+                .HasForeignKey(d => d.BookId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Order Details_Book");
+
+            entity.HasOne(d => d.Order).WithMany(p => p.OrderDetails)
+                .HasForeignKey(d => d.Id)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Order Details_Order");
+        });
+
+        modelBuilder.Entity<Payment>(entity =>
+        {
+            entity.HasKey(e => e.PaymentId).HasName("PK__Payment__ED1FC9EAA0D365BD");
+
+            entity.ToTable("Payment");
+
+            entity.Property(e => e.PaymentId)
+                .ValueGeneratedNever()
+                .HasColumnName("paymentId");
+            entity.Property(e => e.OrderId).HasColumnName("orderId");
+            entity.Property(e => e.PaymentDate).HasColumnName("paymentDate");
+            entity.Property(e => e.PaymentMethod)
+                .HasMaxLength(255)
+                .HasColumnName("paymentMethod");
+            entity.Property(e => e.PaymentStatus)
+                .HasMaxLength(255)
+                .HasColumnName("paymentStatus");
+            entity.Property(e => e.TransactionId)
+                .HasMaxLength(255)
+                .HasColumnName("transactionId");
+
+            entity.HasOne(d => d.Order).WithMany(p => p.Payments)
+                .HasForeignKey(d => d.OrderId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__Payment__order_i__45F365D3");
+        });
+
+        modelBuilder.Entity<ShoppingBasket>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__Shopping__3214EC2790DBB2AE");
+
+            entity.ToTable("ShoppingBasket");
+
+            entity.Property(e => e.Id)
+            .ValueGeneratedNever()  // Встановлено на Never, що забороняє автоматичне генерування значення.
+              .HasColumnName("id");
+            entity.Property(e => e.CustomerEmail)
+                .HasMaxLength(255)
+                .HasColumnName("customerEmail");
+
+            entity.HasOne(d => d.CustomerEmailNavigation).WithMany(p => p.ShoppingBaskets)
+                .HasForeignKey(d => d.CustomerEmail)
+               
+               .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK__ShoppingB__Custo__46E78A0C");
+        });
+
+        modelBuilder.Entity<ShoppingBasketBook>(entity =>
+        {
+            
+            entity.ToTable("ShoppingBasketBook");
+
+            entity.Property(e => e.ShoppingBasketId).HasColumnName("shoppingBasketID");
+            
+            entity.Property(e => e.Count).HasColumnName("count");
+
+            entity.HasOne(d => d.Book)
+            .WithMany(p => p.ShoppingBasketBooks)
+            .HasForeignKey(d => d.BookId) 
+            .OnDelete(DeleteBehavior.ClientSetNull)
+            .HasConstraintName("FK_ShoppingBasketBook_Book");
+
+            entity.HasOne(d => d.ShoppingBasket)
+                  .WithMany(p => p.ShoppingBasketBooks)
+                  .HasForeignKey(d => d.ShoppingBasketId)
+                  .OnDelete(DeleteBehavior.ClientSetNull)
+                  .HasConstraintName("FK__ShoppingB__Shopp__47DBAE45");
+        });
+
+
+        modelBuilder.Entity<WarehouseBook>(entity =>
+        {
+            entity.HasKey(e => new { e.WarehouseCode, e.BookId }).HasName("PK__Warehous__B56B0DC77A0EA844");
+
+            entity.ToTable("WarehouseBook");
+
+            entity.Property(e => e.WarehouseCode).HasColumnName("warehouseCode");
+            entity.Property(e => e.BookId).HasColumnName("bookId");
+            entity.Property(e => e.Count).HasColumnName("count");
+
+            entity.HasOne(d => d.Book).WithMany(p => p.WarehouseBooks)
+                .HasForeignKey(d => d.BookId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__Warehouse__BookI__4AB81AF0");
+        });
+
+        OnModelCreatingPartial(modelBuilder);
+    }
+
+    partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
+}

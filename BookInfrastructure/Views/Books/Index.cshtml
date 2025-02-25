@@ -1,0 +1,82 @@
+﻿@model IEnumerable<BookDomain.Model.Book>
+
+@{
+    ViewData["Title"] = "Управління книгами";
+}
+
+<div class="container mt-4">
+    <h1 class="mb-4">Каталог книг</h1>
+
+    <form method="get">
+        <label for="genre">Фільтр за жанром:</label>
+        <select name="genre" id="genre" asp-items="ViewBag.Genres">
+            <option value="">Усі жанри</option>
+        </select>
+        <button type="submit">Фільтрувати</button>
+    </form>
+    <p>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Додати книгу
+        </a>
+    </p>
+
+    <div class="table-responsive shadow rounded-3">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Назва</th>
+                    <th>Автор</th>
+                    <th>Жанр</th>
+                    <th class="text-center">Рік</th>
+                    <th>Опис</th>
+                    <th class="text-end">Ціна</th>
+                    <th>Категорія</th>
+                    <th class="text-center">Дії</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@Html.DisplayFor(modelItem => item.Name)</td>
+                        <td>@Html.DisplayFor(modelItem => item.AuthorName)</td>
+                        <td>@Html.DisplayFor(modelItem => item.Genre)</td>
+                        <td class="text-center">@Html.DisplayFor(modelItem => item.Year)</td>
+                        <td class="text-truncate" style="max-width: 250px;">@Html.DisplayFor(modelItem => item.Description)</td>
+                        <td class="text-end">$@Html.DisplayFor(modelItem => item.Price)</td>
+                        <td>@Html.DisplayFor(modelItem => item.CategoryId)</td>
+                        <td class="text-center">
+                            <div class="btn-group" role="group">
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary" title="Редагувати">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info" title="Деталі">
+                                    <i class="bi bi-info-circle"></i>
+                                </a>
+                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger" title="Видалити">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    .table tbody tr {
+        transition: all 0.15s ease;
+    }
+
+    .table tbody td {
+        vertical-align: middle;
+    }
+
+    .text-truncate {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+</style>

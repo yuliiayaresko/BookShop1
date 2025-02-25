@@ -1,0 +1,27 @@
+﻿@model ShoppingBasket
+
+<h2>Кошик: @Model.CustomerEmail</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Книга</th>
+            <th>Кількість</th>
+            <th>Ціна за одиницю</th>
+            <th>Загальна вартість</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.ShoppingBasketBooks)
+        {
+            <tr>
+                <td>@item.Book.Name</td>
+                <td>@item.Count</td>
+                <td>@item.Book.Price.ToString("C")</td>
+                <td>@((item.Count * item.Book.Price).ToString("C"))</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a asp-action="AddBook" asp-route-basketId="@Model.Id" class="btn btn-primary">Додати ще книгу</a>

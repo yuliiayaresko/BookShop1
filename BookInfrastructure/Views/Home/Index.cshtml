@@ -1,0 +1,141 @@
+﻿@{
+    ViewData["Title"] = "Головна сторінка";
+}
+
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+
+        .hero-section {
+            padding: 100px 0;
+            text-align: center;
+        }
+
+        .display-4 {
+            font-family: 'Segoe UI', sans-serif;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .card-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border: none;
+        }
+
+            .feature-card:hover {
+                transform: translateY(-10px);
+                box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+            }
+
+        .feature-link {
+            text-decoration: none;
+            color: var(--primary-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: var(--secondary-color);
+            transition: color 0.3s ease;
+        }
+
+        .feature-card:hover .feature-icon {
+            color: var(--accent-color);
+        }
+
+        .feature-text {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .welcome-text {
+            font-size: 1.2rem;
+            color: #555;
+            max-width: 600px;
+            margin: 0 auto 40px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="hero-section">
+        <div class="container">
+            <h1 class="display-4">Ласкаво просимо до Книгарні</h1>
+            <p class="welcome-text">
+                Відкрийте для себе світ літератури через нашу колекцію книжок.
+                Досліджуйте різні категорії та знаходьте нові твори з легкістю .
+            </p>
+
+            <div class="card-container">
+                <div class="feature-card">
+                    <a asp-controller="Categories" asp-action="Index" class="feature-link">
+                        <i class="fas fa-folder-open feature-icon"></i>
+                        <p class="feature-text">Керування категоріями</p>
+                    </a>
+                </div>
+
+                <div class="feature-card">
+                    <a asp-controller="Books" asp-action="Index" class="feature-link">
+                        <i class="fas fa-book-open feature-icon"></i>
+                        <p class="feature-text">Перегляд книжок</p>
+                    </a>
+                </div>
+                <div class="feature-card">
+                    <a asp-controller="Customers" asp-action="Index" class="feature-link">
+                        <i class="fas fa-book-open feature-icon"></i>
+                        <p class="feature-text">Створення акаунту</p>
+                    </a>
+                </div>
+                <div class="feature-card">
+                    <a asp-controller="ShoppingBaskets" asp-action="Index" class="feature-link">
+                        <i class="fas fa-book-open feature-icon"></i>
+                        <p class="feature-text">Створення кошику </p>
+                    </a>
+                </div>
+                <div class="feature-card">
+                    <a asp-controller="Orders" asp-action="Index" class="feature-link">
+                        <i class="fas fa-book-open feature-icon"></i>
+                        <p class="feature-text">Створення замовлення </p>
+                    </a>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+
+   
+</body>
+</html>

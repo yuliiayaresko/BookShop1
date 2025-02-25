@@ -1,0 +1,31 @@
+﻿@model ShoppingBasket
+
+<h2>Додати книгу до кошика @Model.Id</h2>
+
+<form asp-action="AddToBasket" method="post">
+    <input type="hidden" name="basketId" value="@Model.Id" />
+
+    <label for="bookId">Оберіть книгу:</label>
+    <select name="bookId" required>
+        @foreach (var book in ViewBag.Books)
+        {
+            <option value="@book.Id">@book.Name</option>
+        }
+    </select>
+
+    <label for="count">Кількість:</label>
+    <input type="number" name="count" value="1" min="1" required />
+
+    <button type="submit">Додати в кошик</button>
+</form>
+
+@if (Model.ShoppingBasketBooks?.Any() == true)
+{
+    <h3>Книги у кошику:</h3>
+    <ul>
+        @foreach (var item in Model.ShoppingBasketBooks)
+        {
+            <li>@item.Book.Name - Кількість: @item.Count</li>
+        }
+    </ul>
+}
