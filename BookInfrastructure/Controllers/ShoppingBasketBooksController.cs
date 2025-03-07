@@ -49,7 +49,7 @@ namespace BookInfrastructure.Controllers
         // GET: ShoppingBasketBooks/Create
         public IActionResult Create()
         {
-            ViewData["Id"] = new SelectList(_context.Books, "Id", "AuthorName");
+            ViewData["BookId"] = new SelectList(_context.Books, "Id", "AuthorName");
             ViewData["ShoppingBasketId"] = new SelectList(_context.ShoppingBaskets, "Id", "CustomerEmail");
             return View();
         }
@@ -59,7 +59,7 @@ namespace BookInfrastructure.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ShoppingBasketId,Count,Id")] ShoppingBasketBook shoppingBasketBook)
+        public async Task<IActionResult> Create([Bind("Id,ShoppingBasketId,BookId,Count")] ShoppingBasketBook shoppingBasketBook)
         {
             if (ModelState.IsValid)
             {
@@ -67,7 +67,7 @@ namespace BookInfrastructure.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["Id"] = new SelectList(_context.Books, "Id", "AuthorName", shoppingBasketBook.Id);
+            ViewData["BookId"] = new SelectList(_context.Books, "Id", "AuthorName", shoppingBasketBook.BookId);
             ViewData["ShoppingBasketId"] = new SelectList(_context.ShoppingBaskets, "Id", "CustomerEmail", shoppingBasketBook.ShoppingBasketId);
             return View(shoppingBasketBook);
         }
@@ -85,7 +85,7 @@ namespace BookInfrastructure.Controllers
             {
                 return NotFound();
             }
-            ViewData["Id"] = new SelectList(_context.Books, "Id", "AuthorName", shoppingBasketBook.Id);
+            ViewData["BookId"] = new SelectList(_context.Books, "Id", "AuthorName", shoppingBasketBook.BookId);
             ViewData["ShoppingBasketId"] = new SelectList(_context.ShoppingBaskets, "Id", "CustomerEmail", shoppingBasketBook.ShoppingBasketId);
             return View(shoppingBasketBook);
         }
@@ -95,7 +95,7 @@ namespace BookInfrastructure.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ShoppingBasketId,Count,Id")] ShoppingBasketBook shoppingBasketBook)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,ShoppingBasketId,BookId,Count")] ShoppingBasketBook shoppingBasketBook)
         {
             if (id != shoppingBasketBook.Id)
             {
@@ -122,7 +122,7 @@ namespace BookInfrastructure.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["Id"] = new SelectList(_context.Books, "Id", "AuthorName", shoppingBasketBook.Id);
+            ViewData["BookId"] = new SelectList(_context.Books, "Id", "AuthorName", shoppingBasketBook.BookId);
             ViewData["ShoppingBasketId"] = new SelectList(_context.ShoppingBaskets, "Id", "CustomerEmail", shoppingBasketBook.ShoppingBasketId);
             return View(shoppingBasketBook);
         }

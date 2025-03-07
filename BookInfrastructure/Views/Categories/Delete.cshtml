@@ -1,39 +1,107 @@
 ﻿@model BookDomain.Model.Category
 
 @{
-    ViewData["Title"] = "Delete";
+    ViewData["Title"] = "Видалити";
 }
 
-<h1>Видалити</h1>
+<div class="container mt-5 text-center">
+    <h1 class="text-title">Видалення жанру</h1>
+    <p class="lead">Ви впевнені, що хочете видалити цей жанр?</p>
 
-<h3>Ви впевнені що хочете вдалити?</h3>
-<div>
-    <h4>Category</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CategoryName)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CategoryName)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Description)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Description)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Book)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Book.AuthorName)
-        </dd>
-    </dl>
-    
-    <form asp-action="Delete">
+    <div class="category-card p-4 shadow rounded">
+        <dl class="row text-start">
+            <dt class="col-sm-3">Назва жанру:</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.CategoryName)</dd>
+
+            <dt class="col-sm-3">Опис:</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.Description)</dd>
+
+            <dt class="col-sm-3">Автор книги:</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.Book.AuthorName)</dd>
+        </dl>
+    </div>
+
+    <form asp-action="Delete" class="mt-4">
         <input type="hidden" asp-for="Id" />
-        <input type="submit" value="Delete" class="btn btn-danger" /> |
-        <a asp-action="Index">Повернутися</a>
+        <button type="submit" class="btn btn-delete btn-lg me-3">
+            <i class="bi bi-trash"></i> Видалити
+        </button>
+        <a asp-action="Index" class="btn btn-filter btn-lg">
+            <i class="bi bi-arrow-left"></i> Повернутися
+        </a>
     </form>
 </div>
+
+<style>
+    /* Основні кольори з палети */
+    :root {
+        --dark-brown: #493129;
+        --purple: #8b597b;
+        --pink: #efa3a0;
+        --peach: #ffdec7;
+        --cream: #ffede0;
+    }
+
+    body {
+        background-color: var(--cream);
+        font-family: 'Arial', sans-serif;
+        margin: 0;
+        padding: 0;
+        color: var(--dark-brown);
+    }
+
+    .text-title {
+        color: var(--purple);
+        font-size: 2.5rem;
+        margin-bottom: 20px;
+    }
+
+    .container {
+        max-width: 800px;
+        margin: auto;
+        padding: 20px;
+    }
+
+    .category-card {
+        background: var(--peach);
+        border-radius: 15px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        padding: 20px;
+    }
+
+    .row dt {
+        font-weight: bold;
+        color: var(--dark-brown);
+    }
+
+    .row dd {
+        color: var(--purple);
+    }
+
+    .btn {
+        display: inline-block;
+        padding: 10px 20px;
+        text-decoration: none;
+        border-radius: 8px;
+        font-size: 1.2rem;
+        transition: background 0.3s, transform 0.2s;
+    }
+
+        .btn:hover {
+            transform: scale(1.1);
+        }
+
+    .btn-delete {
+        background-color: var(--dark-brown);
+        color: white;
+    }
+
+    .btn-filter {
+        background-color: var(--purple);
+        color: white;
+    }
+
+        .btn-filter:hover {
+            background-color: var(--dark-brown);
+        }
+</style>

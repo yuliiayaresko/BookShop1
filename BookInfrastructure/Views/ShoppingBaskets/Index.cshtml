@@ -1,35 +1,287 @@
 ﻿@model IEnumerable<ShoppingBasket>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Shopping Baskets";
 }
 
-<h1>Кошик</h1>
+<div class="container">
+    <h1>Shopping Baskets</h1>
 
-<p>
-    <a asp-action="Create">Додати</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.CustomerEmailNavigation)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.CustomerEmailNavigation.Email)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Змінити</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Деталі</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Видалити</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+    <div class="basket-container">
+        @foreach (var basket in Model)
+        {
+            <div class="basket-card">
+                <div class="basket-info">
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <p><strong>Customer ID:</strong> @basket.CustomerId</p>
+                        <p><strong>Email:</strong> @basket.Customer?.Email</p>
+                    }
+                    <p><strong>Total Price:</strong> <span id="total-price-@basket.Id">@basket.TotalPrice.ToString("C")</span></p>
+                </div>
+
+                
+
+
+                <div class="basket-books">
+                    <h4>Books:</h4>
+                    <ul>
+                        @foreach (var item in basket.ShoppingBasketBooks)
+                        {
+                            <li class="book-item" id="book-item-@item.Book.Id">
+                                <div class="book-info">
+                                    <img src="@item.Book.ImagePath" alt="@item.Book.Name" class="book-thumbnail" />
+                                    <span class="book-title">@item.Book.Name</span>
+                                </div>
+                                <div class="item-controls">
+                                    <span class="book-price" id="price-@item.Book.Id" data-unit-price="@item.Book.Price">
+                                        @((item.Book.Price * item.Count).ToString("C"))
+                                    </span>
+                                    <div class="quantity-control">
+                                        <button class="btn-quantity" onclick="decreaseQuantity(@item.Book.Id, @basket.Id, @item.Book.Price)">-</button>
+                                        <span id="quantity-@item.Book.Id" data-original-count="@item.Count">@item.Count</span>
+                                        <button class="btn-quantity btn-plus" onclick="increaseQuantity(@item.Book.Id, @basket.Id, @item.Book.Price)">+</button>
+                                    </div>
+                                    <button class="btn-remove" onclick="removeBook(@item.Book.Id, @basket.Id, @item.Book.Price * @item.Count)">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                </div>
+                @if (!User.IsInRole("User"))
+                {
+                    <form asp-action="ProceedToCheckout" method="post">
+                        <input type="hidden" name="basketId" value="@basket.Id" />
+                        <button type="submit" class="btn btn-primary">Оформити замовлення</button>
+                    </form>
+
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    :root {
+        --dark-brown: #493129;
+        --purple: #8b597b;
+        --dark-purple: #6b395b;
+        --pink: #efa3a0;
+        --peach: #ffdec7;
+        --cream: #ffede0;
+        --red: #d32f2f;
+    }
+
+    body {
+        background-color: var(--cream);
+        font-family: 'Arial', sans-serif;
+        color: var(--dark-brown);
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: auto;
+        padding: 20px;
+        text-align: center;
+    }
+
+    h1 {
+        color: var(--dark-brown);
+        font-size: 2.5rem;
+    }
+
+    .basket-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+    }
+
+    .basket-card {
+        background: var(--peach);
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        transition: transform 0.3s;
+    }
+
+        .basket-card:hover {
+            transform: scale(1.02);
+        }
+
+    .basket-info p {
+        margin: 5px 0;
+    }
+
+    .basket-books ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    .book-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 15px 0;
+        padding: 10px;
+        background-color: rgba(255, 255, 255, 0.4);
+        border-radius: 8px;
+    }
+
+    .book-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-align: left;
+        width: 60%;
+    }
+
+    .book-title {
+        font-weight: 500;
+    }
+
+    .book-thumbnail {
+        width: 50px;
+        height: auto;
+        border-radius: 5px;
+    }
+
+    .item-controls {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .book-price {
+        min-width: 80px;
+        text-align: right;
+    }
+
+    .quantity-control {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .btn-quantity {
+        background-color: var(--purple);
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        cursor: pointer;
+        border-radius: 5px;
+        font-size: 1rem;
+    }
+
+    .btn-plus {
+        background-color: var(--dark-purple);
+    }
+
+    .btn-quantity:hover {
+        background-color: var(--dark-brown);
+    }
+
+    .btn-remove {
+        background-color: var(--dark-brown);
+        color: white;
+        border: none;
+        padding: 6px 10px;
+        cursor: pointer;
+        border-radius: 5px;
+        transition: background 0.3s;
+    }
+
+        .btn-remove:hover {
+            background-color: #6b395b;
+        }
+
+    .btn {
+        display: inline-block;
+        padding: 12px 20px;
+        text-decoration: none;
+        border-radius: 5px;
+        font-size: 1rem;
+        font-weight: bold;
+        transition: background 0.3s, transform 0.2s;
+        text-align: center;
+        width: 100%;
+    }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+    .btn-confirm {
+        background-color: var(--dark-purple);
+        color: white;
+        margin-top: 15px;
+    }
+</style>
+
+<script>
+    function updateTotalPrice(basketId) {
+        
+        let priceElements = document.querySelectorAll(`[id^="price-"]`);
+        let total = 0;
+
+        priceElements.forEach(el => {
+            
+            let priceText = el.textContent.trim();
+            let price = parseFloat(priceText.replace(/[^\d.,]/g, '').replace(',', '.'));
+            total += price;
+        });
+
+        
+        let totalElement = document.getElementById(`total-price-${basketId}`);
+        let currencySymbol = totalElement.textContent.trim().replace(/[\d., ]/g, '');
+        totalElement.textContent = `${currencySymbol} ${total.toFixed(2).replace('.', ',')}`;
+    }
+
+    function increaseQuantity(bookId, basketId, unitPrice) {
+        let quantityElement = document.getElementById(`quantity-${bookId}`);
+        let priceElement = document.getElementById(`price-${bookId}`);
+
+        let quantity = parseInt(quantityElement.textContent);
+        quantityElement.textContent = quantity + 1;
+
+        let newQuantity = quantity + 1;
+        let totalPrice = unitPrice * newQuantity;
+
+        let currencySymbol = priceElement.textContent.trim().replace(/[\d., ]/g, '');
+        priceElement.textContent = `${currencySymbol} ${totalPrice.toFixed(2).replace('.', ',')}`;
+
+        // Update the total basket price
+        updateTotalPrice(basketId);
+    }
+
+    function decreaseQuantity(bookId, basketId, unitPrice) {
+        let quantityElement = document.getElementById(`quantity-${bookId}`);
+        let priceElement = document.getElementById(`price-${bookId}`);
+
+        let quantity = parseInt(quantityElement.textContent);
+        if (quantity > 1) {
+            quantityElement.textContent = quantity - 1;
+
+            
+            let newQuantity = quantity - 1;
+            let totalPrice = unitPrice * newQuantity;
+
+            
+            let currencySymbol = priceElement.textContent.trim().replace(/[\d., ]/g, '');
+            priceElement.textContent = `${currencySymbol} ${totalPrice.toFixed(2).replace('.', ',')}`;
+
+            
+            updateTotalPrice(basketId);
+        }
+    }
+
+    function removeBook(bookId, basketId, bookPrice) {
+       
+        let bookItem = document.getElementById(`book-item-${bookId}`);
+        bookItem.remove();
+
+        
+        updateTotalPrice(basketId);
+    }
+</script>

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using BookDomain.Model;
 using BookInfrastructure;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BookInfrastructure.Controllers
 {
@@ -20,24 +21,22 @@ namespace BookInfrastructure.Controllers
         }
 
         // GET: Books
-        public async Task<IActionResult> Index(string? genre)
+        public async Task<IActionResult> Index(int? categoryId)
         {
             var booksQuery = _context.Books.AsQueryable();
 
-            if (!string.IsNullOrEmpty(genre))
+            if (categoryId.HasValue)
             {
-                booksQuery = booksQuery.Where(b => b.Genre == genre);
+                booksQuery = booksQuery.Where(b => b.CategoryId == categoryId.Value);
             }
 
-            var genres = await _context.Books
-                .Select(b => b.Genre)
-                .Distinct()
-                .ToListAsync();
-
-            ViewBag.Genres = new SelectList(genres);
+            var categories = await _context.Categories.ToListAsync();
+            ViewBag.Categories = categories;
 
             return View(await booksQuery.ToListAsync());
         }
+
+
 
 
         // GET: Books/Details/5
@@ -54,6 +53,7 @@ namespace BookInfrastructure.Controllers
             {
                 return NotFound();
             }
+           
 
             return View(book);
         }
@@ -69,10 +69,32 @@ namespace BookInfrastructure.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Name,AuthorName,Genre,Year,Description,Price,CategoryId,Id")] Book book)
+
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Create([Bind("Name,AuthorName,Genre,Year,Description,Price,CategoryId,Id")] Book book, IFormFile? ImageFile)
         {
             if (ModelState.IsValid)
             {
+                // Обробка завантаження фото
+                if (ImageFile != null)
+                {
+                    // Генерація унікального імені для зображення
+                    var fileName = Path.GetFileNameWithoutExtension(ImageFile.FileName);
+                    var extension = Path.GetExtension(ImageFile.FileName);
+                    var newFileName = $"{fileName}_{Guid.NewGuid()}{extension}";
+                    var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images", newFileName);
+
+                    // Завантаження файлу
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await ImageFile.CopyToAsync(stream);
+                    }
+
+                    // Зберігаємо шлях до зображення у моделі
+                    book.ImagePath = "/images/" + newFileName;
+                }
+
+                // Додавання книги до контексту та збереження
                 _context.Add(book);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -80,6 +102,7 @@ namespace BookInfrastructure.Controllers
             return View(book);
         }
 
+        [Authorize(Roles = "Admin")]
         // GET: Books/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
@@ -101,7 +124,8 @@ namespace BookInfrastructure.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Name,AuthorName,Genre,Year,Description,Price,CategoryId,Id")] Book book)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Edit(int id, [Bind("Name,AuthorName,Genre,Year,Description,Price,CategoryId,Id,ImagePath")] Book book, IFormFile? ImageFile)
         {
             if (id != book.Id)
             {
@@ -112,7 +136,51 @@ namespace BookInfrastructure.Controllers
             {
                 try
                 {
-                    _context.Update(book);
+                    var existingBook = await _context.Books.FindAsync(id);
+
+                    if (existingBook == null)
+                    {
+                        return NotFound();
+                    }
+
+                   
+                    existingBook.Name = book.Name;
+                    existingBook.AuthorName = book.AuthorName;
+                    existingBook.Genre = book.Genre;
+                    existingBook.Year = book.Year;
+                    existingBook.Description = book.Description;
+                    existingBook.Price = book.Price;
+                    existingBook.CategoryId = book.CategoryId;
+
+                    
+                    if (ImageFile != null)
+                    {
+                        var fileName = Path.GetFileNameWithoutExtension(ImageFile.FileName);
+                        var extension = Path.GetExtension(ImageFile.FileName);
+                        var newFileName = $"{fileName}_{Guid.NewGuid()}{extension}";
+                        var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images", newFileName);
+
+                        // Завантаження нового файлу
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await ImageFile.CopyToAsync(stream);
+                        }
+
+                        // Видалення старого зображення (якщо воно було)
+                        if (!string.IsNullOrEmpty(existingBook.ImagePath))
+                        {
+                            var oldImagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", existingBook.ImagePath.TrimStart('/'));
+                            if (System.IO.File.Exists(oldImagePath))
+                            {
+                                System.IO.File.Delete(oldImagePath);
+                            }
+                        }
+
+                        // Оновлення шляху до нового зображення
+                        existingBook.ImagePath = "/images/" + newFileName;
+                    }
+
+                    _context.Update(existingBook);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -126,12 +194,15 @@ namespace BookInfrastructure.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Index", "Home");
             }
+
             return View(book);
         }
 
+
         // GET: Books/Delete/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -161,7 +232,7 @@ namespace BookInfrastructure.Controllers
             }
 
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction("Index", "Home");
         }
 
         private bool BookExists(int id)

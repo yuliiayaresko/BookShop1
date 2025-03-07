@@ -1,43 +1,154 @@
 ﻿@model IEnumerable<BookDomain.Model.Category>
-
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Опис жанрів";
 }
+@if (User.IsInRole("Admin")){
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <style>
+        /* Основні кольори з палети */
+        :root {
+        --dark-brown: #493129;
+        --purple: #8b597b;
+        --pink: #efa3a0;
+        --peach: #ffdec7;
+        --cream: #ffede0;
+        }
 
-<h1>Управління Жанрами</h1>
+        body {
+        background-color: var(--cream);
+        font-family: 'Arial', sans-serif;
+        margin: 0;
+        padding: 0;
+        color: var(--dark-brown);
+        }
 
-<p>
-    <a asp-action="Create">Додати</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.CategoryName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Description)
-            </th>
-            
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.CategoryName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Description)
-            </td>
-            
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Змінити</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Деталі</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Видалити</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+        .container {
+        max-width: 1000px;
+        margin: auto;
+        padding: 20px;
+        }
+
+        h1 {
+        color: var(--dark-brown);
+        font-size: 2.5rem;
+        margin-bottom: 20px;
+        text-align: center;
+        }
+
+        .add-button {
+        text-align: right;
+        margin-bottom: 20px;
+        }
+
+        .btn {
+        display: inline-block;
+        padding: 10px 20px;
+        text-decoration: none;
+        border-radius: 5px;
+        font-size: 1rem;
+        transition: background 0.3s, transform 0.2s;
+        }
+
+        .btn:hover {
+        transform: scale(1.1);
+        }
+
+        .btn-add {
+        background-color: var(--pink);
+        color: white;
+        }
+
+        .category-table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: var(--peach);
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .category-table thead {
+        background-color: var(--purple);
+        color: white;
+        }
+
+        .category-table th,
+        .category-table td {
+        padding: 15px;
+        text-align: left;
+        border-bottom: 1px solid var(--cream);
+        }
+
+        .category-table tbody tr:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .action-links a {
+        display: inline-block;
+        margin-right: 10px;
+        color: var(--purple);
+        text-decoration: none;
+        font-weight: bold;
+        transition: color 0.3s;
+        }
+
+        .action-links a:hover {
+        color: var(--dark-brown);
+        text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Управління Жанрами</h1>
+        @if (User.IsInRole("Admin"))
+        {
+            <div class="add-button">
+                <a asp-action="Create" class="btn btn-add">Додати новий жанр</a>
+        </div>}
+
+        <table class="category-table">
+            <thead>
+                <tr>
+                    <th>
+                        Назва жанру
+                    </th>
+                    <th>
+                        Опис
+                    </th>
+                    <th>Дії</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.CategoryName)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Description)
+                        </td>
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <td class="action-links">
+                                <a asp-action="Edit" asp-route-id="@item.Id">Змінити</a> |
+                                <a asp-action="Details" asp-route-id="@item.Id">Деталі</a> |
+                                <a asp-action="Delete" asp-route-id="@item.Id">Видалити</a>
+                            </td>
+                        }
+                        <td class="action-links">
+                            <a asp-action="Details" asp-route-id="@item.Id">Деталі</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>}

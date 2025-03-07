@@ -1,0 +1,226 @@
+﻿@page
+@model RegisterModel
+@{
+    ViewData["Title"] = "Реєстрація";
+}
+
+<div class="container">
+    <h1>@ViewData["Title"]</h1>
+
+    <div class="register-container">
+        <div class="register-card">
+            <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+                <h2>Реєстрація</h2>
+                <hr />
+                <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+
+                <div class="form-group">
+                    <label asp-for="Input.Email">Пошта</label>
+                    <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Input.Password">Пароль</label>
+                    <input asp-for="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
+                    <span asp-validation-for="Input.Password" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Input.ConfirmPassword">Підтвердження паролю</label>
+                    <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
+                    <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+                </div>
+
+                <button id="registerSubmit" type="submit" class="btn btn-confirm">Зареєструватися</button>
+            </form>
+        </div>
+
+        <div class="auth-options-card">
+            <section>
+
+                <hr />
+                @{
+                    if ((Model.ExternalLogins?.Count ?? 0) == 0)
+                    {
+                    }
+                    else
+                    {
+                        <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+                            <div class="external-providers">
+                                <p>
+                                    @foreach (var provider in Model.ExternalLogins!)
+                                    {
+                                        <button type="submit" class="btn btn-social" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">@provider.DisplayName</button>
+                                    }
+                                </p>
+                            </div>
+                        </form>
+                    }
+                }
+            </section>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --dark-brown: #493129;
+        --purple: #8b597b;
+        --pink: #efa3a0;
+        --peach: #ffdec7;
+        --cream: #ffede0;
+       
+    }
+
+    body {
+        background-color: var(--cream);
+        font-family: 'Arial', sans-serif;
+        color: var(--dark-brown);
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: auto;
+        padding: 20px;
+        text-align: center;
+    }
+
+    h1 {
+        color: var(--dark-brown);
+        font-size: 2.5rem;
+        margin-bottom: 30px;
+    }
+
+
+    .register-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+    }
+
+    .register-card {
+        background: var(--peach);
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        transition: transform 0.3s;
+        text-align: left;
+    }
+
+        .register-card:hover:hover {
+            transform: scale(1.02);
+        }
+
+    hr {
+        border-color: var(--dark-brown);
+        opacity: 0.2;
+        margin: 15px 0 20px 0;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+        color: var(--dark-brown);
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid var(--purple);
+        border-radius: 8px;
+        background-color: rgba(255, 255, 255, 0.9);
+        color: var(--dark-brown);
+        font-size: 1rem;
+        transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--dark-brown);
+            box-shadow: 0 0 0 3px rgba(73, 49, 41, 0.2);
+        }
+
+    .text-danger {
+        color: #d32f2f;
+        font-size: 0.9rem;
+        margin-top: 5px;
+        display: block;
+    }
+
+    .btn {
+        display: inline-block;
+        padding: 12px 20px;
+        text-decoration: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: bold;
+        border: none;
+        cursor: pointer;
+        transition: background 0.3s, transform 0.2s;
+        text-align: center;
+    }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+    .btn-confirm {
+        background-color: var(--purple);
+        );
+        color: white;
+        width: 100%;
+        padding: 15px;
+        margin-top: 10px;
+        font-size: 1.1rem;
+    }
+
+    .btn-social {
+        background-color: var(--purple);
+        color: white;
+        margin: 5px;
+        min-width: 180px;
+    }
+
+        
+
+    .no-services-message {
+        background-color: rgba(255, 255, 255, 0.5);
+        padding: 15px;
+        border-radius: 8px;
+    }
+
+        .no-services-message a {
+            color: var(--purple);
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+            .no-services-message a:hover {
+                text-decoration: underline;
+            }
+
+    .external-providers {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+   
+        .register-container
+
+    {
+        grid-template-columns: 1fr;
+    }
+
+    }
+</style>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

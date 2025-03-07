@@ -2,18 +2,17 @@
 using System.ComponentModel.DataAnnotations.Schema;
 
 public partial class ShoppingBasket
-
 {
-    
-    public int Id { get; set; }
-    // Email клієнта
-    public string CustomerEmail { get; set; } = null!;
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public int Id { get; set; }  // Це ваш первинний ключ
+    public string CustomerId { get; set; } = null!;
 
+    
 
     // Зв'язок із клієнтом через ForeignKey
-    [ForeignKey("CustomerEmail")]
-    public virtual Customer CustomerEmailNavigation { get; set; } = null!;
+    public virtual Customer Customer { get; set; } = null!;  // Зв'язок з таблицею Customer
 
     // Зв'язок з книгами в кошику
     public ICollection<ShoppingBasketBook> ShoppingBasketBooks { get; set; } = new List<ShoppingBasketBook>();
+    public decimal TotalPrice => ShoppingBasketBooks?.Sum(i => i.Count * i.Book.Price) ?? 0;
 }

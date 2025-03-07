@@ -1,16 +1,14 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using BookInfrastructure;
 using BookDomain.Model;
+using BookInfrastructure;
+using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
-
-
 
 namespace BookInfrastructure.Controllers
 {
@@ -26,102 +24,102 @@ namespace BookInfrastructure.Controllers
         // GET: ShoppingBaskets
         public async Task<IActionResult> Index()
         {
-            var booksShopdatabaseContext = _context.ShoppingBaskets.Include(s => s.CustomerEmailNavigation);
-            return View(await booksShopdatabaseContext.ToListAsync());
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isAdmin = User.IsInRole("Admin");
+
+            var baskets = isAdmin
+                ? await _context.ShoppingBaskets
+                    .Include(b => b.ShoppingBasketBooks)
+                    .ThenInclude(sb => sb.Book)
+                    .Include(b => b.Customer)
+                    .ToListAsync()
+                : await _context.ShoppingBaskets
+                    .Include(b => b.ShoppingBasketBooks)
+                    .ThenInclude(sb => sb.Book)
+                    .Where(b => b.CustomerId == userId)
+                    .ToListAsync();
+
+            return View(baskets);
         }
 
-        public async Task<IActionResult> AddBook(int basketId)
+        public async Task<IActionResult> AddToBasket(int bookId)
         {
-            // Завантажуємо кошик разом із зв’язаними книгами (якщо потрібно)
-            var basket = await _context.ShoppingBaskets
-                .Include(b => b.ShoppingBasketBooks) // Додаємо, якщо потрібно відображати книги в кошику
-                .FirstOrDefaultAsync(b => b.Id == basketId);
-
-            if (basket == null) return NotFound();
-
-
-            // Передаємо список усіх книг через ViewBag
-            ViewBag.Books = await _context.Books.ToListAsync();
-
-            // Повертаємо сам кошик як модель представлення
-            return View(basket);
-        }
-
-
-
-        [HttpPost]
-        public async Task<IActionResult> AddToBasket(int basketId, int Id, int count)
-        {
-            if (count <= 0)
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
             {
-                return BadRequest("Кількість книг має бути більше 0.");
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
             }
 
-            // Перевіряємо, чи існує така книга в базі
-            var bookExists = await _context.Books.AnyAsync(b => b.Id == Id);
-            if (!bookExists)
-            {
-                return NotFound($"Книга з ID {Id} не знайдена.");
-            }
+            var book = await _context.Books.FindAsync(bookId);
+            if (book == null) return NotFound();
 
-            // Перевіряємо, чи існує кошик
             var basket = await _context.ShoppingBaskets
                 .Include(b => b.ShoppingBasketBooks)
-                .FirstOrDefaultAsync(b => b.Id == basketId);
+                .FirstOrDefaultAsync(b => b.CustomerId == userId);
+
             if (basket == null)
             {
-                return NotFound($"Кошик з ID {basketId} не знайдений.");
+                basket = new ShoppingBasket { CustomerId = userId, ShoppingBasketBooks = new List<ShoppingBasketBook>() };
+                _context.ShoppingBaskets.Add(basket);
             }
 
-            // Перевіряємо, чи ця книга вже є в кошику
-            var existingItem = basket.ShoppingBasketBooks?.FirstOrDefault(sb => sb.Id == Id);
-
-            if (existingItem != null)
+            var basketItem = basket.ShoppingBasketBooks.FirstOrDefault(sb => sb.BookId == bookId);
+            if (basketItem != null)
             {
-                existingItem.Count += count;
+                basketItem.Count++;
             }
             else
             {
-                var newItem = new ShoppingBasketBook
-                {
-                    ShoppingBasketId = basketId,
-                    Id = Id,
-                    Count = count
-                };
+                 basket.ShoppingBasketBooks.Add(new ShoppingBasketBook { BookId = bookId, Count = 1, ShoppingBasketId = basket.Id });
 
-                _context.ShoppingBasketBooks.Add(newItem);
+
             }
 
             await _context.SaveChangesAsync();
-            return RedirectToAction("Index", new { id = basketId });
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RemoveBook(int basketId, int bookId)
+        {
+            var basket = await _context.ShoppingBaskets
+                .Include(b => b.ShoppingBasketBooks)
+                .FirstOrDefaultAsync(b => b.Id == basketId);
+
+            var item = basket?.ShoppingBasketBooks.FirstOrDefault(i => i.BookId == bookId);
+            if (item != null)
+            {
+                _context.ShoppingBasketBooks.Remove(item);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction("ShoppingBaskets"); // Перенаправлення назад до кошиків
         }
 
 
-
-
-        // Деталі кошика з книгами
-        public async Task<IActionResult> Details(int id)
+        // GET: ShoppingBaskets/Details/5
+        public async Task<IActionResult> Details(int? id)
         {
-            var basket = await _context.ShoppingBaskets
-     .Include(b => b.ShoppingBasketBooks)
-     .ThenInclude(sbb => sbb.Book)
-     .FirstOrDefaultAsync(b => b.Id == id);
-
-            if (basket == null)
+            if (id == null)
             {
                 return NotFound();
             }
 
-            return View(basket);
+            var shoppingBasket = await _context.ShoppingBaskets
+                .Include(s => s.Customer)
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (shoppingBasket == null)
+            {
+                return NotFound();
+            }
+
+            return View(shoppingBasket);
         }
-
-
-
 
         // GET: ShoppingBaskets/Create
         public IActionResult Create()
         {
-            ViewData["CustomerEmail"] = new SelectList(_context.Customers, "Email", "Email");
+            ViewData["CustomerEmail"] = new SelectList(_context.Set<Customer>(), "Id", "Id");
             return View();
         }
 
@@ -130,33 +128,17 @@ namespace BookInfrastructure.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-
-       
-public async Task<IActionResult> Create([Bind("CustomerEmail,Id")] ShoppingBasket shoppingBasket)
+        public async Task<IActionResult> Create([Bind("Id,CustomerEmail")] ShoppingBasket shoppingBasket)
         {
-            // Перевірка, чи існує користувач із таким email
-            var customer = await _context.Customers
-                .FirstOrDefaultAsync(c => c.Email == shoppingBasket.CustomerEmail);
-
-            if (customer == null)
+            if (ModelState.IsValid)
             {
-                return BadRequest("Customer not found.");
+                _context.Add(shoppingBasket);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
             }
-
-            // Призначаємо навігаційну властивість
-            shoppingBasket.CustomerEmailNavigation = customer;
-
-
-
-            // Додаємо новий кошик у базу
-            _context.Add(shoppingBasket);
-            await _context.SaveChangesAsync();
-
-            return RedirectToAction(nameof(Index));
+            ViewData["CustomerEmail"] = new SelectList(_context.Set<Customer>(), "Id", "Id", shoppingBasket.CustomerId);
+            return View(shoppingBasket);
         }
-
-
-
 
         // GET: ShoppingBaskets/Edit/5
         public async Task<IActionResult> Edit(int? id)
@@ -171,7 +153,7 @@ public async Task<IActionResult> Create([Bind("CustomerEmail,Id")] ShoppingBaske
             {
                 return NotFound();
             }
-            ViewData["CustomerEmail"] = new SelectList(_context.Customers, "Email", "Email", shoppingBasket.CustomerEmail);
+            ViewData["CustomerEmail"] = new SelectList(_context.Set<Customer>(), "Id", "Id", shoppingBasket.CustomerId);
             return View(shoppingBasket);
         }
 
@@ -180,41 +162,38 @@ public async Task<IActionResult> Create([Bind("CustomerEmail,Id")] ShoppingBaske
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, ShoppingBasket shoppingBasket)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,CustomerEmail")] ShoppingBasket shoppingBasket)
         {
             if (id != shoppingBasket.Id)
             {
                 return NotFound();
             }
 
-            // Отримуємо існуючий запис з бази
-            var existingBasket = await _context.ShoppingBaskets.FindAsync(id);
-            if (existingBasket == null)
+            if (ModelState.IsValid)
             {
-                return NotFound();
-            }
-
-            try
-            {
-                // Оновлюємо тільки змінні поля (без Id)
-                existingBasket.CustomerEmail = shoppingBasket.CustomerEmail;
-
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ShoppingBasketExists(id))
+                try
                 {
-                    return NotFound();
+                    _context.Update(shoppingBasket);
+                    await _context.SaveChangesAsync();
                 }
-                else
+                catch (DbUpdateConcurrencyException)
                 {
-                    throw;
+                    if (!ShoppingBasketExists(shoppingBasket.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
                 }
+                return RedirectToAction(nameof(Index));
             }
-
-            return RedirectToAction(nameof(Index));
+            ViewData["CustomerEmail"] = new SelectList(_context.Set<Customer>(), "Id", "Id", shoppingBasket.CustomerId);
+            return View(shoppingBasket);
         }
+        
+       
 
 
         // GET: ShoppingBaskets/Delete/5
@@ -226,7 +205,7 @@ public async Task<IActionResult> Create([Bind("CustomerEmail,Id")] ShoppingBaske
             }
 
             var shoppingBasket = await _context.ShoppingBaskets
-                .Include(s => s.CustomerEmailNavigation)
+                .Include(s => s.Customer)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (shoppingBasket == null)
             {
@@ -235,7 +214,33 @@ public async Task<IActionResult> Create([Bind("CustomerEmail,Id")] ShoppingBaske
 
             return View(shoppingBasket);
         }
+        [HttpPost]
+        public async Task<IActionResult> ProceedToCheckout(int basketId)
+        {
+            var basket = await _context.ShoppingBaskets
+                .Include(b => b.ShoppingBasketBooks)
+                .ThenInclude(sb => sb.Book)
+                .FirstOrDefaultAsync(b => b.Id == basketId);
 
+            if (basket == null)
+            {
+                return NotFound();
+            }
+
+            var order = new Order
+            {
+                CustomerEmail = basket.CustomerId, // або отримайте email користувача
+                OrderDate = DateOnly.FromDateTime(DateTime.Now),
+                TotalPrice = basket.ShoppingBasketBooks.Sum(sb => sb.Book.Price * sb.Count),
+                ShoppingBasketId = basket.Id,
+                OrderStatus = "Pending"
+            };
+
+            _context.Orders.Add(order);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Checkout", "Orders", new { id = order.OrderId });
+        }
         // POST: ShoppingBaskets/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]

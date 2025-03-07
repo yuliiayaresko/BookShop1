@@ -1,0 +1,100 @@
+﻿@page
+@model LoginModel
+@{
+    ViewData["Title"] = "Log in";
+}
+
+<style>
+    body {
+        background-color: #ffede0;
+    }
+    /* Match the primary purple color from navbar */
+    .btn-primary {
+        background-color: #8b597b !important;
+        border-color: #8b597b !important;
+    }
+
+        .btn-primary:hover {
+            background-color: #493129 !important;
+            border-color: #493129 !important;
+        }
+
+    .btn-outline-primary {
+        color: #8b597b !important;
+        border-color: #8b597b !important;
+    }
+
+        .btn-outline-primary:hover {
+            background-color: #8b597b !important;
+            color: white !important;
+        }
+
+    a {
+        color: #8b597b !important;
+    }
+
+        a:hover {
+            color: #493129 !important;
+        }
+
+    .logo {
+        width: 60px;
+        height: 60px;
+        background-color: #8b597b;
+        color: white;
+        font-size: 32px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        margin: 0 auto;
+    }
+
+    .form-control:focus {
+        border-color: #8b597b !important;
+        box-shadow: 0 0 0 0.25rem rgba(139, 89, 123, 0.25) !important;
+    }
+
+    .form-check-input:checked {
+        background-color: #8b597b !important;
+        border-color: #8b597b !important;
+    }
+
+</style>
+
+<div class="d-flex align-items-center justify-content-center vh-100 flex-column">
+    <div class="text-center mb-3">
+        <div class="logo">L</div>
+    </div>
+    <h1 class="h3 mb-3 fw-normal">Вхід до облікового запису</h1>
+    <form id="account" class="w-100" style="max-width: 330px;" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+        <div class="form-floating mb-3">
+            <input asp-for="Input.Email" class="form-control" autocomplete="username" placeholder="name@example.com" required>
+            <label asp-for="Input.Email">Електронна пошта</label>
+            <span asp-validation-for="Input.Email" class="text-danger"></span>
+        </div>
+        <div class="form-floating mb-3">
+            <input asp-for="Input.Password" type="password" class="form-control" autocomplete="current-password" placeholder="Password" required>
+            <label asp-for="Input.Password">Пароль</label>
+            <span asp-validation-for="Input.Password" class="text-danger"></span>
+        </div>
+        <div class="form-check text-start mb-3">
+            <input class="form-check-input" asp-for="Input.RememberMe">
+            <label class="form-check-label" asp-for="Input.RememberMe">Запам'ятати мене</label>
+        </div>
+
+        <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-primary">Увійти</button>
+        <div class="text-center mt-3">
+            <a asp-page="./Register" class="btn btn-outline-primary">Реєстрація</a>
+        </div>
+        <div class="mt-3 text-center">
+            <a id="forgot-password" asp-page="./ForgotPassword">Забули пароль?</a>
+        </div>
+    </form>
+    <footer class="mt-4 text-muted">&copy; 2017–2025 Loring</footer>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

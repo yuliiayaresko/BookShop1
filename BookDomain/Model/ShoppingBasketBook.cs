@@ -7,7 +7,7 @@ namespace BookDomain.Model
     public partial class ShoppingBasketBook
 
     {
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)] 
+        //[DatabaseGenerated(DatabaseGeneratedOption.Identity)] 
 
         public int Id { get; set; }
         public int ShoppingBasketId { get; set; }
@@ -15,7 +15,7 @@ namespace BookDomain.Model
 
         public int Count { get; set; }
 
-     
+        
 
         public virtual Book Book { get; set; } = null!;
         [ForeignKey("ShoppingBasketId")]

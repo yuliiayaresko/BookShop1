@@ -4,57 +4,180 @@
     ViewData["Title"] = "Деталі книги";
 }
 
-<h1>Деталі книги</h1>
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <style>
+        /* Основні кольори з палети */
+        :root {
+        --dark-brown: #493129;
+        --purple: #8b597b;
+        --pink: #efa3a0;
+        --peach: #ffdec7;
+        --cream: #ffede0;
+        }
 
-<div>
-    <h4>Книга</h4>
-    <hr />
-    <dl class="row">
-        <dt class="col-sm-2">
-            Назва
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Name)
-        </dd>
-        <dt class="col-sm-2">
-            Автор
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.AuthorName)
-        </dd>
-        <dt class="col-sm-2">
-            Жанр
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Genre)
-        </dd>
-        <dt class="col-sm-2">
-            Рік
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Year)
-        </dd>
-        <dt class="col-sm-2">
-            Опис
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Description)
-        </dd>
-        <dt class="col-sm-2">
-            Ціна
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Price)
-        </dd>
-        <dt class="col-sm-2">
-            Категорія
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.CategoryId)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Редагувати</a> |
-    <a asp-action="Index">Назад до списку</a>
-</div>
+        body {
+        background-color: var(--cream);
+        font-family: 'Arial', sans-serif;
+        margin: 0;
+        padding: 0;
+        color: var(--dark-brown);
+        }
+
+        .container {
+        max-width: 800px;
+        margin: auto;
+        padding: 20px;
+        text-align: center;
+        }
+
+        h1, h4 {
+        color: var(--dark-brown);
+        }
+
+        h1 {
+        font-size: 2.5rem;
+        margin-bottom: 20px;
+        }
+
+        .details-card {
+        background: var(--peach);
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        margin-bottom: 20px;
+        text-align: left;
+        }
+
+        .row {
+        display: grid;
+        grid-template-columns: 30% 70%;
+        margin-bottom: 10px;
+        }
+
+        dt {
+        font-weight: bold;
+        color: var(--purple);
+        padding: 8px;
+        }
+
+        dd {
+        padding: 8px;
+        margin-left: 0;
+        }
+
+        .book-image {
+        text-align: center;
+        margin: 20px 0;
+        }
+
+        .book-image img {
+        max-width: 250px;
+        max-height: 300px;
+        object-fit: contain;
+        border-radius: 10px;
+        background-color: white;
+        padding: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn {
+        display: inline-block;
+        padding: 10px 20px;
+        margin: 10px;
+        text-decoration: none;
+        border-radius: 5px;
+        font-size: 1rem;
+        transition: background 0.3s, transform 0.2s;
+        }
+
+        .btn:hover {
+        transform: scale(1.1);
+        }
+
+        .btn-edit {
+        background-color: var(--pink);
+        color: white;
+        }
+
+        .btn-back {
+        background-color: var(--purple);
+        color: white;
+        }
+
+        .actions {
+        text-align: center;
+        margin-top: 20px;
+        }
+
+        hr {
+        border: 1px solid var(--pink);
+        margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Деталі книги</h1>
+
+        <div class="details-card">
+            <h4>Інформація про книгу</h4>
+            <hr />
+
+            @if (!string.IsNullOrEmpty(Model.ImagePath))
+            {
+                <div class="book-image">
+                    <img src="@Model.ImagePath" alt="Фото книги" />
+                </div>
+            }
+
+            <dl class="row">
+                <dt>Назва</dt>
+                <dd>@Html.DisplayFor(model => model.Name)</dd>
+
+                <dt>Автор</dt>
+                <dd>@Html.DisplayFor(model => model.AuthorName)</dd>
+
+                <dt>Жанр</dt>
+                <dd>@Html.DisplayFor(model => model.Genre)</dd>
+
+                <dt>Рік</dt>
+                <dd>@Html.DisplayFor(model => model.Year)</dd>
+
+                <dt>Опис</dt>
+                <dd>@Html.DisplayFor(model => model.Description)</dd>
+
+                <dt>Ціна</dt>
+                <dd>@Html.DisplayFor(model => model.Price) грн</dd>
+
+                <dt>Категорія</dt>
+                <dd>@Html.DisplayFor(model => model.CategoryId)</dd>
+            </dl>
+            @if (User.IsInRole("Admin"))
+            {
+                <div class="actions">
+                    <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-edit">Редагувати</a>
+            </div>}
+         
+               
+                
+            <div class="actions">
+                <form asp-controller="ShoppingBaskets" asp-action="AddToBasket" method="post" style="display:inline;">
+                    <input type="hidden" name="bookId" value="@Model.Id" />
+                    <button type="submit" class="btn btn-cart">
+                        <i class="bi bi-cart-plus"></i> Додати в кошик
+                    </button>
+                </form>
+            </div>
+
+            <div class="actions">
+                <a asp-action="Index" class="btn btn-back">Назад до списку</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

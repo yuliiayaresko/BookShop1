@@ -1,27 +1,24 @@
 ﻿@model ShoppingBasket
 
-<h2>Кошик: @Model.CustomerEmail</h2>
+@{
+    ViewData["Title"] = "Details";
+}
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Книга</th>
-            <th>Кількість</th>
-            <th>Ціна за одиницю</th>
-            <th>Загальна вартість</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model.ShoppingBasketBooks)
-        {
-            <tr>
-                <td>@item.Book.Name</td>
-                <td>@item.Count</td>
-                <td>@item.Book.Price.ToString("C")</td>
-                <td>@((item.Count * item.Book.Price).ToString("C"))</td>
-            </tr>
-        }
-    </tbody>
-</table>
+<h1>Details</h1>
 
-<a asp-action="AddBook" asp-route-basketId="@Model.Id" class="btn btn-primary">Додати ще книгу</a>
+<div>
+    <h4>ShoppingBasket</h4>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Customer)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Customer.Id)
+        </dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> 
+    <a asp-action="Index">Back to List</a>
+</div>

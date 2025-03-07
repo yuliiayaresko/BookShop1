@@ -2,15 +2,16 @@
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using BookDomain.Model;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+
 
 namespace BookInfrastructure;
 
-public partial class BooksShopdatabaseContext : DbContext
+public partial class BooksShopdatabaseContext : IdentityDbContext<IdentityUser> // Наслідуємося від IdentityDbContext
 {
-    public BooksShopdatabaseContext()
-    {
-    }
-
+   
+    
     public BooksShopdatabaseContext(DbContextOptions<BooksShopdatabaseContext> options)
         : base(options)
     {
@@ -20,7 +21,7 @@ public partial class BooksShopdatabaseContext : DbContext
 
     public virtual DbSet<Category> Categories { get; set; }
 
-    public virtual DbSet<Customer> Customers { get; set; }
+    public DbSet<Customer> Customers { get; set; }
 
     public virtual DbSet<Order> Orders { get; set; }
 
@@ -40,6 +41,7 @@ public partial class BooksShopdatabaseContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
         modelBuilder.Entity<Book>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Book__447D36EB06A970C8");
@@ -62,8 +64,8 @@ public partial class BooksShopdatabaseContext : DbContext
                 .HasMaxLength(255)
                 .HasColumnName("publisherName");
             entity.Property(e => e.Description)
-                .HasMaxLength(255)
-                .HasColumnName("title");
+         .HasColumnType("nvarchar(MAX)") // Змінили тип на nvarchar(MAX)
+         .HasColumnName("title");
             entity.Property(e => e.Year).HasColumnName("year");
         });
 
@@ -84,37 +86,19 @@ public partial class BooksShopdatabaseContext : DbContext
                 .HasColumnType("text")
                 .HasColumnName("description");
 
-            entity.HasOne(d => d.Book).WithMany(p => p.Categories)
-                .HasForeignKey(d => d.BookId)
-                .HasConstraintName("FK_Category_Book");
+            
         });
 
-        modelBuilder.Entity<Customer>(entity =>
-        {
-            entity.HasKey(e => e.Email).HasName("PK__Customer__A9D1053550F16F36");
-
-            entity.ToTable("Customer");
-
-            entity.Property(e => e.Email)
-                .HasMaxLength(255)
-                .HasColumnName("email");
-            entity.Property(e => e.Address)
-                .HasColumnType("text")
-                .HasColumnName("address");
-            entity.Property(e => e.Name)
-                .HasMaxLength(255)
-                .HasColumnName("name");
-            entity.Property(e => e.Phone).HasColumnName("phone");
-        });
+       
 
         modelBuilder.Entity<Order>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Order__4659622912A5D1BD");
+            entity.HasKey(e => e.OrderId).HasName("PK__Order__4659622912A5D1BD");
 
             entity.ToTable("Order");
 
-            entity.Property(e => e.Id)
-                .ValueGeneratedNever()
+            entity.Property(e => e.OrderId)
+                .ValueGeneratedOnAdd()
                 .HasColumnName("orderId");
             entity.Property(e => e.CustomerEmail)
                 .HasMaxLength(255)
@@ -134,7 +118,7 @@ public partial class BooksShopdatabaseContext : DbContext
                 .HasColumnType("decimal(18, 0)")
                 .HasColumnName("totalPrice");
 
-            entity.HasOne(d => d.CustomerEmailNavigation).WithMany(p => p.Orders)
+            entity.HasOne(d => d.Customer).WithMany(p => p.Orders)
                 .HasForeignKey(d => d.CustomerEmail)
                 .HasConstraintName("FK__Order__customer___44FF419A");
         });
@@ -196,14 +180,14 @@ public partial class BooksShopdatabaseContext : DbContext
             entity.ToTable("ShoppingBasket");
 
             entity.Property(e => e.Id)
-            .ValueGeneratedNever()  // Встановлено на Never, що забороняє автоматичне генерування значення.
+           .ValueGeneratedOnAdd()
               .HasColumnName("id");
-            entity.Property(e => e.CustomerEmail)
+            entity.Property(e => e.CustomerId)
                 .HasMaxLength(255)
-                .HasColumnName("customerEmail");
+                .HasColumnName("customerId");
 
-            entity.HasOne(d => d.CustomerEmailNavigation).WithMany(p => p.ShoppingBaskets)
-                .HasForeignKey(d => d.CustomerEmail)
+            entity.HasOne(d => d.Customer).WithMany(p => p.ShoppingBaskets)
+                .HasForeignKey(d => d.CustomerId)
                
                .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("FK__ShoppingB__Custo__46E78A0C");

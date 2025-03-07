@@ -1,4 +1,6 @@
-﻿@{
+﻿@model IEnumerable<BookDomain.Model.Book>
+
+@{
     ViewData["Title"] = "Головна сторінка";
 }
 
@@ -7,135 +9,153 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
+    <title>@ViewData["Title"]</title>
     <style>
+        /* Основні кольори з палети */
         :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #3498db;
-            --accent-color: #e74c3c;
+        --dark-brown: #493129;
+        --purple: #8b597b;
+        --pink: #efa3a0;
+        --peach: #ffdec7;
+        --cream: #ffede0;
         }
 
         body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
+        background-color: var(--cream);
+        font-family: 'Arial', sans-serif;
+        margin: 0;
+        padding: 0;
+        color: var(--dark-brown);
         }
 
-        .hero-section {
-            padding: 100px 0;
-            text-align: center;
+        .container {
+        max-width: 1200px;
+        margin: auto;
+        padding: 20px;
+        text-align: center;
         }
 
-        .display-4 {
-            font-family: 'Segoe UI', sans-serif;
-            font-weight: 700;
-            color: var(--primary-color);
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
+        h1 {
+        color: var(--dark-brown);
+        font-size: 2.5rem;
+        margin-bottom: 20px;
         }
 
-        .card-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            padding: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
+        .book-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
         }
 
-        .feature-card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 30px;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            border: none;
+        .book-card {
+        background: var(--peach);
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        text-align: center;
+        transition: transform 0.3s;
         }
 
-            .feature-card:hover {
-                transform: translateY(-10px);
-                box-shadow: 0 15px 30px rgba(0,0,0,0.15);
-            }
-
-        .feature-link {
-            text-decoration: none;
-            color: var(--primary-color);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        .book-card:hover {
+        transform: scale(1.05);
         }
 
-        .feature-icon {
-            font-size: 2.5rem;
-            margin-bottom: 20px;
-            color: var(--secondary-color);
-            transition: color 0.3s ease;
+        .book-foto img {
+        width: 100%;
+        max-height: 300px; /* Менша висота */
+        object-fit: contain; /* Зменшує зображення, не обрізаючи його */
+        border-radius: 10px;
+        background-color: white; /* Фон, щоб уникнути порожніх областей */
+        padding: 10px; /* Додає простір навколо зображення */
         }
 
-        .feature-card:hover .feature-icon {
-            color: var(--accent-color);
+        .book-title {
+        font-size: 1.4rem;
+        font-weight: bold;
+        color: var(--dark-brown);
+        margin-top: 10px;
         }
 
-        .feature-text {
-            font-size: 1.4rem;
-            font-weight: 600;
-            margin: 0;
+        .book-author {
+        font-size: 1.1rem;
+        color: var(--purple);
         }
 
-        .welcome-text {
-            font-size: 1.2rem;
-            color: #555;
-            max-width: 600px;
-            margin: 0 auto 40px;
-            line-height: 1.6;
+        .book-price {
+        font-size: 1.2rem;
+        color: var(--pink);
+        font-weight: bold;
+        }
+
+        .book-actions {
+        margin-top: 15px;
+        }
+
+        .btn {
+        display: inline-block;
+        padding: 8px 15px;
+        margin: 5px;
+        text-decoration: none;
+        border-radius: 5px;
+        font-size: 1rem;
+        transition: background 0.3s, transform 0.2s;
+        }
+
+        .btn:hover {
+        transform: scale(1.1);
+        }
+
+        .btn-details {
+        background-color: var(--purple);
+        color: white;
+        }
+
+        .btn-edit {
+        background-color: var(--pink);
+        color: white;
+        }
+
+        .btn-delete {
+        background-color: var(--dark-brown);
+        color: white;
         }
     </style>
 </head>
 <body>
-    <div class="hero-section">
-        <div class="container">
-            <h1 class="display-4">Ласкаво просимо до Книгарні</h1>
-            <p class="welcome-text">
-                Відкрийте для себе світ літератури через нашу колекцію книжок.
-                Досліджуйте різні категорії та знаходьте нові твори з легкістю .
-            </p>
+    <div class="container">
+        <h1>Каталог книг</h1>
+        <div class="book-container">
+            @foreach (var book in Model)
+            {
+                <div class="book-card">
+                    <div class="book-foto">
+                        <img src="@book.ImagePath" alt="Фото книги" />
+                    </div>
+                    <div class="book-title">@book.Name</div>
+                    <div class="book-author">@book.AuthorName</div>
+                    <div class="book-price">@book.Price грн</div>
+                    <form action="@Url.Action("AddToBasket", "ShoppingBaskets")" method="post" style="display:inline;">
+                        <input type="hidden" name="bookId" value="@book.Id" />
+                        <button type="submit" class="btn btn-cart">
+                            <i class="bi bi-cart-plus"></i> Додати у кошик
+                        </button>
+                    </form>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <div class="book-actions">
+                           
+                            <a href="@Url.Action("Edit", "Books", new { id = book.Id })" class="btn btn-edit">Редагувати</a>
+                            <a href="@Url.Action("Delete", "Books", new { id = book.Id })" class="btn btn-delete">Видалити</a>
 
-            <div class="card-container">
-                <div class="feature-card">
-                    <a asp-controller="Categories" asp-action="Index" class="feature-link">
-                        <i class="fas fa-folder-open feature-icon"></i>
-                        <p class="feature-text">Керування категоріями</p>
-                    </a>
-                </div>
+                        </div>
+                    }
+                    <div class="book-actions">
+                        <a href="@Url.Action("Details", "Books", new { id = book.Id })" class="btn btn-details">Деталі</a>
+                    </div>
 
-                <div class="feature-card">
-                    <a asp-controller="Books" asp-action="Index" class="feature-link">
-                        <i class="fas fa-book-open feature-icon"></i>
-                        <p class="feature-text">Перегляд книжок</p>
-                    </a>
                 </div>
-                <div class="feature-card">
-                    <a asp-controller="Customers" asp-action="Index" class="feature-link">
-                        <i class="fas fa-book-open feature-icon"></i>
-                        <p class="feature-text">Створення акаунту</p>
-                    </a>
-                </div>
-                <div class="feature-card">
-                    <a asp-controller="ShoppingBaskets" asp-action="Index" class="feature-link">
-                        <i class="fas fa-book-open feature-icon"></i>
-                        <p class="feature-text">Створення кошику </p>
-                    </a>
-                </div>
-                <div class="feature-card">
-                    <a asp-controller="Orders" asp-action="Index" class="feature-link">
-                        <i class="fas fa-book-open feature-icon"></i>
-                        <p class="feature-text">Створення замовлення </p>
-                    </a>
-                </div>
-                
-            </div>
+            }
         </div>
     </div>
-
-   
 </body>
 </html>
