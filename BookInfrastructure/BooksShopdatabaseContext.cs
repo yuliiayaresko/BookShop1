@@ -64,7 +64,7 @@ public partial class BooksShopdatabaseContext : IdentityDbContext<IdentityUser> 
                 .HasMaxLength(255)
                 .HasColumnName("publisherName");
             entity.Property(e => e.Description)
-         .HasColumnType("nvarchar(MAX)") // Змінили тип на nvarchar(MAX)
+         .HasColumnType("nvarchar(MAX)") 
          .HasColumnName("title");
             entity.Property(e => e.Year).HasColumnName("year");
         });
@@ -110,9 +110,7 @@ public partial class BooksShopdatabaseContext : IdentityDbContext<IdentityUser> 
             entity.Property(e => e.OrderStatus)
                 .HasMaxLength(255)
                 .HasColumnName("orderStatus");
-            entity.Property(e => e.Price)
-                .HasColumnType("decimal(18, 0)")
-                .HasColumnName("price");
+           
             entity.Property(e => e.ShoppingBasketId).HasColumnName("shoppingBasketId");
             entity.Property(e => e.TotalPrice)
                 .HasColumnType("decimal(18, 0)")
@@ -125,52 +123,33 @@ public partial class BooksShopdatabaseContext : IdentityDbContext<IdentityUser> 
 
         modelBuilder.Entity<OrderDetail>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK_Order Details");
+            entity.HasKey(e => e.OrderDetailId); // Явно визначаємо первинний ключ
+            entity.Property(e => e.OrderDetailId)
+                .HasColumnName("orderDetailsId") // Явно вказуємо назву стовпця
+                .ValueGeneratedNever(); // Якщо ID не генерується автоматично
+            entity.Property(e => e.OrderId)
+                .HasColumnName("orderId");
+            entity.Property(e => e.BookId)
+                .HasColumnName("bookId");
+            entity.Property(e => e.Quantity)
+                .HasColumnName("quantity");
+            entity.Property(e => e.Status)
+                .HasColumnName("status");
+            entity.Property(e => e.TotalPrice)
+                .HasColumnName("totalPrice")
+                .HasColumnType("decimal(18, 0)");
 
-            entity.Property(e => e.Id)
-                .ValueGeneratedNever()
-                .HasColumnName("id");
-            entity.Property(e => e.BookId).HasColumnName("bookId");
-            entity.Property(e => e.Id).HasColumnName("orderId");
-            entity.Property(e => e.Quantity).HasColumnName("quantity");
-            entity.Property(e => e.StatusId).HasColumnName("statusId");
-
-            entity.HasOne(d => d.Book).WithMany(p => p.OrderDetails)
-                .HasForeignKey(d => d.BookId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Order Details_Book");
-
-            entity.HasOne(d => d.Order).WithMany(p => p.OrderDetails)
-                .HasForeignKey(d => d.Id)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Order Details_Order");
-        });
-
-        modelBuilder.Entity<Payment>(entity =>
-        {
-            entity.HasKey(e => e.PaymentId).HasName("PK__Payment__ED1FC9EAA0D365BD");
-
-            entity.ToTable("Payment");
-
-            entity.Property(e => e.PaymentId)
-                .ValueGeneratedNever()
-                .HasColumnName("paymentId");
-            entity.Property(e => e.OrderId).HasColumnName("orderId");
-            entity.Property(e => e.PaymentDate).HasColumnName("paymentDate");
-            entity.Property(e => e.PaymentMethod)
-                .HasMaxLength(255)
-                .HasColumnName("paymentMethod");
-            entity.Property(e => e.PaymentStatus)
-                .HasMaxLength(255)
-                .HasColumnName("paymentStatus");
-            entity.Property(e => e.TransactionId)
-                .HasMaxLength(255)
-                .HasColumnName("transactionId");
-
-            entity.HasOne(d => d.Order).WithMany(p => p.Payments)
+            entity.HasOne(d => d.Order)
+                .WithMany(p => p.OrderDetails)
                 .HasForeignKey(d => d.OrderId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Payment__order_i__45F365D3");
+                .HasConstraintName("FK_OrderDetails_Order");
+
+            entity.HasOne(d => d.Book)
+                .WithMany(p => p.OrderDetails)
+                .HasForeignKey(d => d.BookId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_OrderDetails_Book");
         });
 
         modelBuilder.Entity<ShoppingBasket>(entity =>
@@ -195,24 +174,25 @@ public partial class BooksShopdatabaseContext : IdentityDbContext<IdentityUser> 
 
         modelBuilder.Entity<ShoppingBasketBook>(entity =>
         {
-            
             entity.ToTable("ShoppingBasketBook");
 
-            entity.Property(e => e.ShoppingBasketId).HasColumnName("shoppingBasketID");
-            
+            entity.HasKey(e => new { e.ShoppingBasketId, e.BookId }); // Складений ключ
+
+            entity.Property(e => e.ShoppingBasketId).HasColumnName("shoppingBasketId");
+            entity.Property(e => e.BookId).HasColumnName("bookId"); // Додано явне відображення
             entity.Property(e => e.Count).HasColumnName("count");
 
             entity.HasOne(d => d.Book)
-            .WithMany(p => p.ShoppingBasketBooks)
-            .HasForeignKey(d => d.BookId) 
-            .OnDelete(DeleteBehavior.ClientSetNull)
-            .HasConstraintName("FK_ShoppingBasketBook_Book");
+                .WithMany(p => p.ShoppingBasketBooks)
+                .HasForeignKey(d => d.BookId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_ShoppingBasketBook_Book");
 
             entity.HasOne(d => d.ShoppingBasket)
-                  .WithMany(p => p.ShoppingBasketBooks)
-                  .HasForeignKey(d => d.ShoppingBasketId)
-                  .OnDelete(DeleteBehavior.ClientSetNull)
-                  .HasConstraintName("FK__ShoppingB__Shopp__47DBAE45");
+                .WithMany(p => p.ShoppingBasketBooks)
+                .HasForeignKey(d => d.ShoppingBasketId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_ShoppingBasketBook_ShoppingBasket");
         });
 
 

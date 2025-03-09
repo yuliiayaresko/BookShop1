@@ -48,11 +48,19 @@ using (var scope = app.Services.CreateScope())
     var userManager = services.GetRequiredService<UserManager<Customer>>();
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
 
-    // Викликаємо метод ініціалізації ролей та адміністратора
-    await IdentityRoless.SeedRolesAndAdminAsync(userManager, roleManager);
+    try
+    {
+        // Викликаємо метод ініціалізації ролей та адміністратора
+        await IdentityRoless.SeedRolesAndAdminAsync(userManager, roleManager).ConfigureAwait(false);
+    }
+    catch (Exception ex)
+    {
+        // Логування помилок (додайте свій механізм логування, наприклад, ILogger)
+        Console.WriteLine($"Помилка при ініціалізації ролей: {ex.Message}");
+    }
 }
 
-// Налаштовуємо обробку помилок для production
+// Налаштування обробки помилок для production
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -70,8 +78,8 @@ app.UseAuthorization();
 // Маршрутизація
 app.MapControllerRoute(
     name: "default",
-     pattern: "{controller=Home}/{action=Index}/{id?}")
-    .WithStaticAssets();
+    pattern: "{controller=Home}/{action=Index}/{id?}"); // Прибрано .WithStaticAssets()
+
 app.MapRazorPages();
 
 app.Run();

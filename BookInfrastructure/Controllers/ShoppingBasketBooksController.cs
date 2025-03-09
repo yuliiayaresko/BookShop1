@@ -22,14 +22,16 @@ namespace BookInfrastructure.Controllers
         // GET: ShoppingBasketBooks
         public async Task<IActionResult> Index()
         {
-            var booksShopdatabaseContext = _context.ShoppingBasketBooks.Include(s => s.Book).Include(s => s.ShoppingBasket);
+            var booksShopdatabaseContext = _context.ShoppingBasketBooks
+                .Include(s => s.Book)
+                .Include(s => s.ShoppingBasket);
             return View(await booksShopdatabaseContext.ToListAsync());
         }
 
-        // GET: ShoppingBasketBooks/Details/5
-        public async Task<IActionResult> Details(int? id)
+        // GET: ShoppingBasketBooks/Details
+        public async Task<IActionResult> Details(int? shoppingBasketId, int? bookId)
         {
-            if (id == null)
+            if (shoppingBasketId == null || bookId == null)
             {
                 return NotFound();
             }
@@ -37,7 +39,7 @@ namespace BookInfrastructure.Controllers
             var shoppingBasketBook = await _context.ShoppingBasketBooks
                 .Include(s => s.Book)
                 .Include(s => s.ShoppingBasket)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(m => m.ShoppingBasketId == shoppingBasketId && m.BookId == bookId);
             if (shoppingBasketBook == null)
             {
                 return NotFound();
@@ -50,7 +52,7 @@ namespace BookInfrastructure.Controllers
         public IActionResult Create()
         {
             ViewData["BookId"] = new SelectList(_context.Books, "Id", "AuthorName");
-            ViewData["ShoppingBasketId"] = new SelectList(_context.ShoppingBaskets, "Id", "CustomerEmail");
+            ViewData["ShoppingBasketId"] = new SelectList(_context.ShoppingBaskets, "Id", "CustomerId");
             return View();
         }
 
@@ -59,7 +61,7 @@ namespace BookInfrastructure.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,ShoppingBasketId,BookId,Count")] ShoppingBasketBook shoppingBasketBook)
+        public async Task<IActionResult> Create([Bind("ShoppingBasketId,BookId,Count")] ShoppingBasketBook shoppingBasketBook)
         {
             if (ModelState.IsValid)
             {
@@ -68,36 +70,37 @@ namespace BookInfrastructure.Controllers
                 return RedirectToAction(nameof(Index));
             }
             ViewData["BookId"] = new SelectList(_context.Books, "Id", "AuthorName", shoppingBasketBook.BookId);
-            ViewData["ShoppingBasketId"] = new SelectList(_context.ShoppingBaskets, "Id", "CustomerEmail", shoppingBasketBook.ShoppingBasketId);
+            ViewData["ShoppingBasketId"] = new SelectList(_context.ShoppingBaskets, "Id", "CustomerId", shoppingBasketBook.ShoppingBasketId);
             return View(shoppingBasketBook);
         }
 
-        // GET: ShoppingBasketBooks/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        // GET: ShoppingBasketBooks/Edit
+        public async Task<IActionResult> Edit(int? shoppingBasketId, int? bookId)
         {
-            if (id == null)
+            if (shoppingBasketId == null || bookId == null)
             {
                 return NotFound();
             }
 
-            var shoppingBasketBook = await _context.ShoppingBasketBooks.FindAsync(id);
+            var shoppingBasketBook = await _context.ShoppingBasketBooks
+                .FirstOrDefaultAsync(m => m.ShoppingBasketId == shoppingBasketId && m.BookId == bookId);
             if (shoppingBasketBook == null)
             {
                 return NotFound();
             }
             ViewData["BookId"] = new SelectList(_context.Books, "Id", "AuthorName", shoppingBasketBook.BookId);
-            ViewData["ShoppingBasketId"] = new SelectList(_context.ShoppingBaskets, "Id", "CustomerEmail", shoppingBasketBook.ShoppingBasketId);
+            ViewData["ShoppingBasketId"] = new SelectList(_context.ShoppingBaskets, "Id", "CustomerId", shoppingBasketBook.ShoppingBasketId);
             return View(shoppingBasketBook);
         }
 
-        // POST: ShoppingBasketBooks/Edit/5
+        // POST: ShoppingBasketBooks/Edit
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,ShoppingBasketId,BookId,Count")] ShoppingBasketBook shoppingBasketBook)
+        public async Task<IActionResult> Edit(int shoppingBasketId, int bookId, [Bind("ShoppingBasketId,BookId,Count")] ShoppingBasketBook shoppingBasketBook)
         {
-            if (id != shoppingBasketBook.Id)
+            if (shoppingBasketId != shoppingBasketBook.ShoppingBasketId || bookId != shoppingBasketBook.BookId)
             {
                 return NotFound();
             }
@@ -111,7 +114,7 @@ namespace BookInfrastructure.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!ShoppingBasketBookExists(shoppingBasketBook.Id))
+                    if (!ShoppingBasketBookExists(shoppingBasketId, bookId))
                     {
                         return NotFound();
                     }
@@ -123,14 +126,14 @@ namespace BookInfrastructure.Controllers
                 return RedirectToAction(nameof(Index));
             }
             ViewData["BookId"] = new SelectList(_context.Books, "Id", "AuthorName", shoppingBasketBook.BookId);
-            ViewData["ShoppingBasketId"] = new SelectList(_context.ShoppingBaskets, "Id", "CustomerEmail", shoppingBasketBook.ShoppingBasketId);
+            ViewData["ShoppingBasketId"] = new SelectList(_context.ShoppingBaskets, "Id", "CustomerId", shoppingBasketBook.ShoppingBasketId);
             return View(shoppingBasketBook);
         }
 
-        // GET: ShoppingBasketBooks/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        // GET: ShoppingBasketBooks/Delete
+        public async Task<IActionResult> Delete(int? shoppingBasketId, int? bookId)
         {
-            if (id == null)
+            if (shoppingBasketId == null || bookId == null)
             {
                 return NotFound();
             }
@@ -138,7 +141,7 @@ namespace BookInfrastructure.Controllers
             var shoppingBasketBook = await _context.ShoppingBasketBooks
                 .Include(s => s.Book)
                 .Include(s => s.ShoppingBasket)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(m => m.ShoppingBasketId == shoppingBasketId && m.BookId == bookId);
             if (shoppingBasketBook == null)
             {
                 return NotFound();
@@ -147,12 +150,13 @@ namespace BookInfrastructure.Controllers
             return View(shoppingBasketBook);
         }
 
-        // POST: ShoppingBasketBooks/Delete/5
+        // POST: ShoppingBasketBooks/Delete
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public async Task<IActionResult> DeleteConfirmed(int shoppingBasketId, int bookId)
         {
-            var shoppingBasketBook = await _context.ShoppingBasketBooks.FindAsync(id);
+            var shoppingBasketBook = await _context.ShoppingBasketBooks
+                .FirstOrDefaultAsync(m => m.ShoppingBasketId == shoppingBasketId && m.BookId == bookId);
             if (shoppingBasketBook != null)
             {
                 _context.ShoppingBasketBooks.Remove(shoppingBasketBook);
@@ -162,9 +166,9 @@ namespace BookInfrastructure.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        private bool ShoppingBasketBookExists(int id)
+        private bool ShoppingBasketBookExists(int shoppingBasketId, int bookId)
         {
-            return _context.ShoppingBasketBooks.Any(e => e.Id == id);
+            return _context.ShoppingBasketBooks.Any(e => e.ShoppingBasketId == shoppingBasketId && e.BookId == bookId);
         }
     }
 }

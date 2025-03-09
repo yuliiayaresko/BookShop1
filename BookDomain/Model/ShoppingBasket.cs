@@ -12,7 +12,7 @@ public partial class ShoppingBasket
     // Зв'язок із клієнтом через ForeignKey
     public virtual Customer Customer { get; set; } = null!;  // Зв'язок з таблицею Customer
 
-    // Зв'язок з книгами в кошику
+   
     public ICollection<ShoppingBasketBook> ShoppingBasketBooks { get; set; } = new List<ShoppingBasketBook>();
     public decimal TotalPrice => ShoppingBasketBooks?.Sum(i => i.Count * i.Book.Price) ?? 0;
 }

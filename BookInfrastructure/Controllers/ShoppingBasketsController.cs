@@ -230,7 +230,7 @@ namespace BookInfrastructure.Controllers
             var order = new Order
             {
                 CustomerEmail = basket.CustomerId, // або отримайте email користувача
-                OrderDate = DateOnly.FromDateTime(DateTime.Now),
+                OrderDate = DateTime.Now,
                 TotalPrice = basket.ShoppingBasketBooks.Sum(sb => sb.Book.Price * sb.Count),
                 ShoppingBasketId = basket.Id,
                 OrderStatus = "Pending"
@@ -241,6 +241,7 @@ namespace BookInfrastructure.Controllers
 
             return RedirectToAction("Checkout", "Orders", new { id = order.OrderId });
         }
+
         // POST: ShoppingBaskets/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]

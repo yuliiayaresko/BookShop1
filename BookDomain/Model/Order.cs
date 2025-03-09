@@ -11,7 +11,7 @@ public partial class Order
     public int OrderId { get; set; } 
     public string? CustomerEmail { get; set; }
 
-    public DateOnly? OrderDate { get; set; }
+    public DateTime? OrderDate { get; set; }
 
     public decimal? TotalPrice { get; set; }
 
@@ -20,8 +20,8 @@ public partial class Order
     public string? OrderStatus { get; set; }
 
     public int? ShoppingBasketId { get; set; }
-
-    public decimal? Price { get; set; }
+    
+    
 
     public virtual Customer? Customer { get; set; }
 

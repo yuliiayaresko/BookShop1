@@ -1,4 +1,4 @@
-﻿@model BookDomain.Model.Order
+﻿@model BookDomain.Model.Payment
 
 @{
     ViewData["Title"] = "Delete";
@@ -8,50 +8,49 @@
 
 <h3>Are you sure you want to delete this?</h3>
 <div>
-    <h4>Order</h4>
+    <h4>Payment</h4>
     <hr />
     <dl class="row">
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.OrderDate)
+            @Html.DisplayNameFor(model => model.PaymentMethod)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.OrderDate)
+            @Html.DisplayFor(model => model.PaymentMethod)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.TotalPrice)
+            @Html.DisplayNameFor(model => model.PaymentStatus)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.TotalPrice)
+            @Html.DisplayFor(model => model.PaymentStatus)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.DeliveryAddress)
+            @Html.DisplayNameFor(model => model.PaymentDate)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.DeliveryAddress)
+            @Html.DisplayFor(model => model.PaymentDate)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.OrderStatus)
+            @Html.DisplayNameFor(model => model.TransactionId)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.OrderStatus)
+            @Html.DisplayFor(model => model.TransactionId)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ShoppingBasketId)
+            @Html.DisplayNameFor(model => model.Order)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ShoppingBasketId)
+            @Html.DisplayFor(model => model.Order.OrderId)
         </dd>
-       
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Customer)
+            @Html.DisplayNameFor(model => model.Id)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Customer.Id)
+            @Html.DisplayFor(model => model.Id)
         </dd>
     </dl>
     
     <form asp-action="Delete">
-        <input type="hidden" asp-for="OrderId" />
+        <input type="hidden" asp-for="PaymentId" />
         <input type="submit" value="Delete" class="btn btn-danger" /> |
         <a asp-action="Index">Back to List</a>
     </form>
