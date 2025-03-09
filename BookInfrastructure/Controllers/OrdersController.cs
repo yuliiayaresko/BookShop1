@@ -20,15 +20,18 @@
                 _userManager = userManager;
             }
 
-            // GET: Orders
-            public async Task<IActionResult> Index()
-            {
-                var booksShopdatabaseContext = _context.Orders.Include(o => o.Customer);
-                return View(await booksShopdatabaseContext.ToListAsync());
-            }
+        // GET: Orders
+        public async Task<IActionResult> Index()
+        {
+            var booksShopdatabaseContext = _context.Orders
+                .Include(o => o.Customer)
+                .Include(o => o.OrderDetails)
+                .ThenInclude(od => od.Book);
+            return View(await booksShopdatabaseContext.ToListAsync());
+        }
 
-            // GET: Orders/Details/5
-            public async Task<IActionResult> Details(int? id)
+        // GET: Orders/Details/5
+        public async Task<IActionResult> Details(int? id)
             {
                 if (id == null)
                 {
@@ -322,16 +325,28 @@
                 return View(order);
             }
 
-            [Authorize(Roles = "Admin")]
-            public IActionResult Orders()
-            {
-                var orders = _context.Orders
-                    .Include(o => o.OrderDetails)
-                    .ThenInclude(od => od.Book)
-                    .ToList();
+        [Authorize(Roles = "Admin")]
+        public IActionResult Orders()
+        {
+            var orders = _context.Orders
+                .Include(o => o.OrderDetails)
+                .ThenInclude(od => od.Book)
+                .Include(o => o.Customer) // Додаємо Customer
+                .ToList();
 
-                return View(orders);
+            foreach (var order in orders)
+            {
+                if (order.OrderDetails == null)
+                {
+                    order.OrderDetails = _context.OrderDetails
+                        .Where(od => od.OrderId == order.OrderId)
+                        .Include(od => od.Book)
+                        .ToList();
+                }
             }
+
+            return View(orders);
+        }
 
         public async Task<IActionResult> Checkout(int id)
         {

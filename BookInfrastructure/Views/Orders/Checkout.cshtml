@@ -82,13 +82,13 @@
                     {
                         <div class="cart-item">
                             <span>@(detail.Book?.Name ?? "Невідома книга") - @(detail.Quantity) шт.</span>
-                            <span>Ціна: @((detail.Book?.Price ?? 0) * detail.Quantity).ToString("F2") USD</span>
+                            <span>Ціна: @((detail.Book?.Price ?? 0) * detail.Quantity). Грн </span>
                         </div>
                     }
                 }
                 <div class="cart-item">
                     <span>Загальна сума:</span>
-                    <strong>@(Model.TotalPrice?.ToString("F2") ?? "0.00") USD</strong>
+                    <strong>@(Model.TotalPrice?.ToString("F2") ?? "0.00") Грн</strong>
                 </div>
             </div>
 

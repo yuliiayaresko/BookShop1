@@ -4,9 +4,42 @@
 
 @foreach (var order in Model)
 {
-    <div>
+    <div class="border p-3 mb-3">
         <h5>Замовлення #@order.OrderId</h5>
-        <p>Дата: @order.OrderDate</p>
-        <p>Сума: @order.TotalPrice</p>
+        <p><strong>Дата:</strong> @(order.OrderDate?.ToString("dd.MM.yyyy HH:mm") ?? "Немає даних")</p>
+        <p><strong>Сума:</strong> @(order.TotalPrice?.ToString("C") ?? "0")</p>
+        <p><strong>Статус:</strong> @order.OrderStatus</p>
+        <p><strong>Адреса доставки:</strong> @(order.DeliveryAddress ?? "Немає адреси")</p>
+
+        <h6>Інформація про покупця</h6>
+        <p><strong>Емейл:</strong> @(order.Customer?.Email ?? "Немає емейлу")</p>
+        <p><strong>ID користувача:</strong> @(order.CustomerEmail ?? "Немає ID")</p>
+        @if (order.Customer != null)
+        {
+            // Додаткові дані про користувача, якщо потрібно
+        }
+        else
+        {
+            <p>Користувач не знайдений у базі</p>
+        }
+
+        <h6>Товари в замовленні</h6>
+        @if (order.OrderDetails != null && order.OrderDetails.Any())
+        {
+            <ul>
+                @foreach (var detail in order.OrderDetails)
+                {
+                    <li>
+                        <strong>@(detail.Book?.Name ?? $"Товар з ID {detail.BookId} не знайдено")</strong> -
+                        @detail.Quantity шт.
+                        по @($"{(detail.TotalPrice.HasValue ? detail.TotalPrice.Value : 0):C}") грн
+                    </li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p>Немає товарів у замовленні. OrderDetails: @(order.OrderDetails == null ? "null" : "порожньо")</p>
+        }
     </div>
 }

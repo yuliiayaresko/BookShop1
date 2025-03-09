@@ -126,7 +126,7 @@ public partial class BooksShopdatabaseContext : IdentityDbContext<IdentityUser> 
             entity.HasKey(e => e.OrderDetailId); // Явно визначаємо первинний ключ
             entity.Property(e => e.OrderDetailId)
                 .HasColumnName("orderDetailsId") // Явно вказуємо назву стовпця
-                .ValueGeneratedNever(); // Якщо ID не генерується автоматично
+                .ValueGeneratedOnAdd(); // Якщо ID не генерується автоматично
             entity.Property(e => e.OrderId)
                 .HasColumnName("orderId");
             entity.Property(e => e.BookId)

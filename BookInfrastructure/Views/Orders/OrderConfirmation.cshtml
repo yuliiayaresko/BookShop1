@@ -22,7 +22,6 @@
                 <h5 class="card-title">Замовлення #@Model.OrderId</h5>
                 <p class="card-text">Дата замовлення: @Model.OrderDate?.ToString("dd.MM.yyyy")</p>
                 <p class="card-text">Загальна сума: @Model.TotalPrice?.ToString("F2")</p>
-                <p class="card-text">Статус: @Model.OrderStatus </p>
                 <p class="card-text">Адреса доставки: @Model.DeliveryAddress</p>
 
                 <h6>Товари:</h6>
@@ -32,7 +31,7 @@
                         foreach (var detail in Model.OrderDetails)
                         {
                             <li class="list-group-item bg-dark text-white">
-                                @detail.Book?.Name ?? "Невідома книга" - @detail.Quantity шт. (@((detail.Book?.Price ?? 0) * detail.Quantity).ToString("F2") Грн)
+                                @detail.Book?.Name  @detail.Quantity шт. (@((detail.Book?.Price ?? 0) * detail.Quantity).Грн)
                             </li>
                         }
                     }
