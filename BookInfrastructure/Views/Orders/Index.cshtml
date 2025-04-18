@@ -1,45 +1,366 @@
 ﻿@model List<BookDomain.Model.Order>
 
-<h2>Список замовлень</h2>
+@{
+    ViewData["Title"] = "Список замовлень";
+}
 
-@foreach (var order in Model)
-{
-    <div class="border p-3 mb-3">
-        <h5>Замовлення #@order.OrderId</h5>
-        <p><strong>Дата:</strong> @(order.OrderDate?.ToString("dd.MM.yyyy HH:mm") ?? "Немає даних")</p>
-        <p><strong>Сума:</strong> @(order.TotalPrice?.ToString("C") ?? "0")</p>
-        <p><strong>Статус:</strong> @order.OrderStatus</p>
-        <p><strong>Адреса доставки:</strong> @(order.DeliveryAddress ?? "Немає адреси")</p>
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.min.css">
+    <style>
+        :root {
+            --dark-brown: #493129;
+            --purple: #8b597b;
+            --pink: #efa3a0;
+            --peach: #ffdec7;
+            --cream: #ffede0;
+            --muted-purple: #d1c4d2; /* Новий колір для "Скасовано" */
+        }
 
-        <h6>Інформація про покупця</h6>
-        <p><strong>Емейл:</strong> @(order.Customer?.Email ?? "Немає емейлу")</p>
-        <p><strong>ID користувача:</strong> @(order.CustomerEmail ?? "Немає ID")</p>
-        @if (order.Customer != null)
+        body {
+            background-color: var(--cream);
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: var(--dark-brown);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--dark-brown);
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        .order-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .order-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .new-order .order-header {
+            background-color: var(--pink);
+        }
+
+        .processing-order .order-header {
+            background-color: var(--peach);
+        }
+
+        .delivered-order .order-header {
+            background-color: var(--cream);
+        }
+
+        .canceled-order .order-header {
+            background-color: var(--muted-purple);
+        }
+
+        .order-header span {
+            flex: 1;
+            text-align: center;
+            font-size: 1rem;
+        }
+
+        .status-highlight {
+            flex: 1;
+            text-align: center;
+            font-size: 1rem;
+            padding: 5px;
+            border-radius: 5px;
+            color: var(--dark-brown);
+        }
+
+        .new-order .status-highlight {
+            background-color: var(--pink);
+        }
+
+        .processing-order .status-highlight {
+            background-color: var(--peach);
+        }
+
+        .delivered-order .status-highlight {
+            background-color: var(--cream);
+        }
+
+        .canceled-order .status-highlight {
+            background-color: var(--muted-purple);
+        }
+
+        .toggle-details {
+            background: none;
+            border: none;
+            color: var(--purple);
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: transform 0.3s;
+        }
+
+        .order-details {
+            display: none;
+            padding: 15px;
+            background-color: var(--cream);
+        }
+
+        .order-card.active .order-details {
+            display: block;
+        }
+
+        .order-card.active .toggle-details i {
+            transform: rotate(180deg);
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+            .items-table th, .items-table td {
+                border: 1px solid var(--peach);
+                padding: 10px;
+                text-align: center;
+            }
+
+            .items-table th {
+                background-color: var(--peach);
+                color: var(--purple);
+            }
+
+        .no-orders {
+            text-align: center;
+            font-size: 18px;
+            color: var(--dark-brown);
+            margin: 20px 0;
+        }
+
+        .action-buttons {
+            flex: 1;
+            text-align: center;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 5px 10px;
+            margin: 0 5px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: transform 0.2s;
+        }
+
+            .btn:hover {
+                transform: scale(1.1);
+            }
+
+        .btn-edit {
+            background-color: var(--pink);
+            color: white;
+        }
+
+        .btn-delete {
+            background-color: var(--dark-brown);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Список замовлень</h1>
+        <div class="stock-summary" style="background-color: var(--cream); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+        </div>
+
+        @if (Model == null || !Model.Any())
         {
-            // Додаткові дані про користувача, якщо потрібно
+            <div class="no-orders">
+                <p>Немає замовлень для відображення.</p>
+            </div>
         }
         else
         {
-            <p>Користувач не знайдений у базі</p>
-        }
-
-        <h6>Товари в замовленні</h6>
-        @if (order.OrderDetails != null && order.OrderDetails.Any())
-        {
-            <ul>
-                @foreach (var detail in order.OrderDetails)
+            <div class="order-list">
+                @foreach (var order in Model.OrderByDescending(o => o.OrderStatus == "Нове")
+               .ThenByDescending(o => o.OrderStatus == "В обробці")
+               .ThenBy(o => o.OrderStatus == "Доставлено")
+               .ThenBy(o => o.OrderStatus == "Скасовано"))
                 {
-                    <li>
-                        <strong>@(detail.Book?.Name ?? $"Товар з ID {detail.BookId} не знайдено")</strong> -
-                        @detail.Quantity шт.
-                        по @($"{(detail.TotalPrice.HasValue ? detail.TotalPrice.Value : 0):C}") грн
-                    </li>
+                    <div class="order-card @(GetRowClass(order?.OrderStatus))">
+                        <div class="order-header">
+                            <span>№ @(order?.OrderId ?? 0)</span>
+                            <span>Дата: @(order?.OrderDate?.ToString("dd.MM.yyyy") ?? "Немає даних")</span>
+                            <span>Сума: @(order?.TotalPrice?.ToString("C") ?? "0")</span>
+                            <span class="status-highlight">@(order?.OrderStatus ?? "Невідомий статус")</span>
+                            <span>
+                                @if (!string.IsNullOrEmpty(order?.DeliveryCity) || !string.IsNullOrEmpty(order?.DeliveryStreet) ||
+                               !string.IsNullOrEmpty(order?.DeliveryHouseNumber) || !string.IsNullOrEmpty(order?.DeliveryPostalCode))
+                                {
+                                    @($"{order.DeliveryCity}, {order.DeliveryStreet}, {order.DeliveryHouseNumber}, {order.DeliveryPostalCode}")
+                                }
+                                else
+                                {
+                                    @: Немає адреси
+                                }
+                            </span>
+                            <span>@(order?.Customer?.Email ?? "Немає емейлу")</span>
+                            <span class="action-buttons">
+                                <a asp-action="Edit" asp-route-id="@order?.OrderId" class="btn btn-edit">Редагувати</a>
+                                <a asp-action="Delete" asp-route-id="@order?.OrderId" class="btn btn-delete">Видалити</a>
+                            </span>
+                            <button class="toggle-details">Деталі <i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div class="order-details">
+                            <table class="items-table">
+                                <thead>
+                                    <tr>
+                                        <th>Назва книги</th>
+                                        <th>Автор</th>
+                                        <th>Ціна</th>
+                                        <th>Кількість</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (order?.OrderDetails != null && order.OrderDetails.Any())
+                                    {
+                                        @foreach (var detail in order.OrderDetails)
+                                        {
+                                            <tr>
+                                                <td>@(detail?.Book?.Name ?? "Немає даних")</td>
+                                                <td>@(detail?.Book?.AuthorName ?? "Немає даних")</td>
+                                                <td>@($"{detail?.Book?.Price ?? 0:C}")</td>
+                                                <td>@(detail?.Quantity ?? 0)</td>
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td colspan="4">Немає книг у цьому замовленні</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 }
-            </ul>
-        }
-        else
-        {
-            <p>Немає товарів у замовленні. OrderDetails: @(order.OrderDetails == null ? "null" : "порожньо")</p>
+            </div>
         }
     </div>
-}
+
+    <div class="row">
+        <div class="col-md-6">
+            <div id="booksPurchasedChart"></div>
+        </div>
+        <div class="col-md-6">
+            <div id="ordersByMonthChart"></div>
+        </div>
+    </div>
+
+    @functions {
+        string GetRowClass(string? status)
+        {
+            return status switch
+            {
+                "Нове" => "new-order",
+                "В обробці" => "processing-order",
+                "Доставлено" => "delivered-order",
+                "Скасовано" => "canceled-order",
+                _ => ""
+            };
+        }
+    }
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+        google.charts.load('current', { 'packages': ['corechart'] });
+        google.charts.setOnLoadCallback(drawCharts);
+
+        function drawCharts() {
+            fetch('/api/charts/booksPurchased')
+                .then(response => response.json())
+                .then(data => {
+                    const dataTable = new google.visualization.DataTable();
+                    dataTable.addColumn('string', 'Книга');
+                    dataTable.addColumn('number', 'Кількість проданих');
+
+                    data.forEach(item => {
+                        dataTable.addRow([item.bookName, item.quantity]);
+                    });
+
+                    const options = {
+                        title: 'Продані книги',
+                        width: 500,
+                        height: 400,
+                        legend: { position: 'right', textStyle: { color: '#493129', fontSize: 14 } },
+                        chartArea: { width: '70%', height: '70%' },
+                        pieSliceText: 'percentage',
+                        colors: ['#8b597b', '#efa3a0', '#ffdec7', '#ffede0', '#493129', '#d1c4d2']
+                    };
+
+                    const chart = new google.visualization.PieChart(document.getElementById('booksPurchasedChart'));
+                    chart.draw(dataTable, options);
+                });
+
+            fetch('/api/charts/ordersByMonth')
+                .then(response => response.json())
+                .then(data => {
+                    const dataTable = new google.visualization.DataTable();
+                    dataTable.addColumn('string', 'Місяць');
+                    dataTable.addColumn('number', 'Кількість замовлень');
+
+                    data.forEach(item => {
+                        dataTable.addRow([item.month, item.orderCount]);
+                    });
+
+                    const options = {
+                        title: 'Кількість замовлень за місяць',
+                        width: 500,
+                        height: 400,
+                        legend: { position: 'none' },
+                        chartArea: { top: 40, left: 50, width: '80%', height: '70%' },
+                        colors: ['#8b597b']
+                    };
+
+                    const chart = new google.visualization.LineChart(document.getElementById('ordersByMonthChart'));
+                    chart.draw(dataTable, options);
+                });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.order-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    const card = header.parentElement;
+                    card.classList.toggle('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

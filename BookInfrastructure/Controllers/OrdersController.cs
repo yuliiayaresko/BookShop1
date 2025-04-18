@@ -24,9 +24,14 @@
         public async Task<IActionResult> Index()
         {
             var booksShopdatabaseContext = _context.Orders
-                .Include(o => o.Customer)
-                .Include(o => o.OrderDetails)
-                .ThenInclude(od => od.Book);
+        .Include(o => o.Customer)
+        .Include(o => o.OrderDetails)
+        .ThenInclude(od => od.Book)
+        .OrderByDescending(o => o.OrderStatus == "Нове") 
+        .ThenByDescending(o => o.OrderStatus == "В обробці") 
+        .ThenBy(o => o.OrderStatus == "Доставлено") 
+        .ThenBy(o => o.OrderStatus == "Скасовано"); 
+
             return View(await booksShopdatabaseContext.ToListAsync());
         }
 
@@ -61,7 +66,7 @@
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("CustomerEmail,OrderDate,TotalPrice,DeliveryAddress,OrderStatus,ShoppingBasketId")] Order order)
+        public async Task<IActionResult> Create([Bind("CustomerEmail,FullName,OrderDate,TotalPrice,DeliveryCity,DeliveryStreet,DeliveryHouseNumber,DeliveryPostalCode,DeliveryInstructions,OrderStatus,ShoppingBasketId")] Order order)
         {
             if (ModelState.IsValid)
             {
@@ -145,153 +150,178 @@
                 return View(order);
             }
 
-            [HttpPost]
-            [ValidateAntiForgeryToken]
-            public async Task<IActionResult> Edit(int id, [Bind("OrderId,CustomerEmail,OrderDate,TotalPrice,DeliveryAddress,OrderStatus,ShoppingBasketId")] Order order, string PaymentMethod, string CardName, string CardNumber, string Expiration, string CVV)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, [Bind("OrderId,CustomerEmail,FullName,OrderDate,TotalPrice,DeliveryCity,DeliveryStreet,DeliveryHouseNumber,DeliveryPostalCode,DeliveryInstructions,OrderStatus,ShoppingBasketId")] Order order)
+        {
+            if (id != order.OrderId)
             {
-                if (id != order.OrderId)
-                {
-                    Console.WriteLine($"ID не збігається: передане {order.OrderId}, очікуване {id}");
-                    return NotFound();
-                }
+                Console.WriteLine($"ID не збігається: передане {order.OrderId}, очікуване {id}");
+                return NotFound();
+            }
 
-                // Отримуємо email автентифікованого користувача
-                var userEmail = User.Identity?.Name;
-                if (string.IsNullOrEmpty(userEmail))
-                {
-                    ModelState.AddModelError("", "Користувач не автентифікований.");
-                    Console.WriteLine("Користувач не автентифікований.");
-                    return View(order);
-                }
+            var userEmail = User.Identity?.Name;
+            if (string.IsNullOrEmpty(userEmail))
+            {
+                ModelState.AddModelError("", "Користувач не автентифікований.");
+                Console.WriteLine("Користувач не автентифікований.");
+                return View(order);
+            }
 
-                // Знаходимо користувача за email і отримуємо його Id
-                var user = await _userManager.FindByEmailAsync(userEmail);
-                if (user == null)
-                {
-                    ModelState.AddModelError("", "Користувача не знайдено.");
-                    Console.WriteLine("Користувача не знайдено для email: " + userEmail);
-                    return View(order);
-                }
+            var user = await _userManager.FindByEmailAsync(userEmail);
+            if (user == null)
+            {
+                ModelState.AddModelError("", "Користувача не знайдено.");
+                Console.WriteLine("Користувача не знайдено для email: " + userEmail);
+                return View(order);
+            }
 
-                // Встановлюємо правильний Id користувача
-                order.CustomerEmail = user.Id;
-                Console.WriteLine($"Встановлено CustomerEmail: {order.CustomerEmail}");
+            var existingOrder = await _context.Orders
+                .Include(o => o.OrderDetails)
+                .ThenInclude(od => od.Book)
+                .FirstOrDefaultAsync(o => o.OrderId == id);
 
-                // Перевіряємо і встановлюємо DeliveryAddress, якщо він null
-                if (string.IsNullOrEmpty(order.DeliveryAddress))
-                {
-                    ModelState.AddModelError("DeliveryAddress", "Адреса доставки є обов'язковою.");
-                    Console.WriteLine("Адреса доставки не вказана.");
-                    return View(order);
-                }
+            if (existingOrder == null)
+            {
+                Console.WriteLine($"Замовлення з ID {id} не знайдено.");
+                return NotFound();
+            }
 
-                // Завантажуємо існуюче замовлення для оновлення
-                var existingOrder = await _context.Orders
-                    .Include(o => o.OrderDetails) // Завантажуємо існуючі деталі
-                    .ThenInclude(od => od.Book)
-                    .FirstOrDefaultAsync(o => o.OrderId == id);
+            if (!User.IsInRole("Admin") && existingOrder.CustomerEmail != user.Id)
+            {
+                Console.WriteLine($"Кастомер {user.Id} намагався редагувати чуже замовлення {existingOrder.OrderId}");
+                return Forbid();
+            }
 
-                if (existingOrder == null)
-                {
-                    Console.WriteLine($"Замовлення з ID {id} не знайдено.");
-                    return NotFound();
-                }
-                Console.WriteLine($"Знайдено замовлення: OrderId={existingOrder.OrderId}");
+            // Оновлена перевірка для нових полів
+            if (string.IsNullOrEmpty(order.DeliveryCity) || string.IsNullOrEmpty(order.DeliveryStreet) ||
+                string.IsNullOrEmpty(order.DeliveryHouseNumber) || string.IsNullOrEmpty(order.DeliveryPostalCode))
+            {
+                ModelState.AddModelError("", "Усі поля адреси доставки є обов'язковими.");
+                Console.WriteLine("Одне з полів адреси доставки не заповнене.");
+                return View(order);
+            }
 
-                // Оновлюємо поля існуючого замовлення
-                existingOrder.CustomerEmail = order.CustomerEmail;
+            if (string.IsNullOrEmpty(order.OrderStatus))
+            {
+                order.OrderStatus = "Новий";
+            }
+
+            if (User.IsInRole("Admin"))
+            {
                 existingOrder.OrderDate = order.OrderDate ?? DateTime.Now;
                 existingOrder.DeliveryAddress = order.DeliveryAddress;
                 existingOrder.OrderStatus = order.OrderStatus;
                 existingOrder.ShoppingBasketId = order.ShoppingBasketId;
                 existingOrder.TotalPrice = order.TotalPrice;
-                if (order.TotalPrice > 0)
-                {
-                    existingOrder.TotalPrice = order.TotalPrice;
-                }
-                else if (order.ShoppingBasketId != null)
-                {
-                    var shoppingBasket = await _context.ShoppingBaskets
-                        .Include(sb => sb.ShoppingBasketBooks)
-                        .ThenInclude(i => i.Book)
-                        .FirstOrDefaultAsync(sb => sb.Id == order.ShoppingBasketId);
-
-                    if (shoppingBasket != null)
-                    {
-                        existingOrder.TotalPrice = shoppingBasket.ShoppingBasketBooks.Sum(i => i.Count * (i.Book?.Price ?? 0m));
-                        Console.WriteLine($"Обчислено TotalPrice: {existingOrder.TotalPrice}, Кількість книг: {shoppingBasket.ShoppingBasketBooks.Count}");
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Koшик не знайдено для ShoppingBasketId: {order.ShoppingBasketId}");
-                    }
-                }
-
-                // Логіка для оновлення або створення OrderDetails
-                if (order.ShoppingBasketId != null)
-                {
-                    var shoppingBasket = await _context.ShoppingBaskets
-                        .Include(sb => sb.ShoppingBasketBooks)
-                        .ThenInclude(sbb => sbb.Book)
-                        .FirstOrDefaultAsync(sb => sb.Id == order.ShoppingBasketId);
-
-                    if (shoppingBasket != null)
-                    {
-                        Console.WriteLine($"Знайдено кошик з {shoppingBasket.ShoppingBasketBooks.Count} елементами.");
-
-                        // Очищаємо існуючі деталі
-                        _context.OrderDetails.RemoveRange(existingOrder.OrderDetails);
-                        Console.WriteLine($"Видалено {existingOrder.OrderDetails.Count} старих деталей.");
-
-                        // Створюємо нові деталі
-                        foreach (var item in shoppingBasket.ShoppingBasketBooks)
-                        {
-                            if (item.Count > 0 && item.Book != null && item.Book.Id > 0)
-                            {
-                                var orderDetail = new OrderDetail
-                                {
-                                    OrderId = existingOrder.OrderId,
-                                    BookId = item.Book.Id,
-                                    Quantity = item.Count,
-                                    TotalPrice = item.Count * item.Book.Price,
-                                    Status = "Новий"
-                                };
-                                _context.OrderDetails.Add(orderDetail);
-                                Console.WriteLine($"Додано OrderDetail: OrderId={orderDetail.OrderId}, BookId={orderDetail.BookId}, Quantity={orderDetail.Quantity}, TotalPrice={orderDetail.TotalPrice}");
-                            }
-                            else
-                            {
-                                Console.WriteLine($"Пропущено елемент: Count={item.Count}, BookId={item.Book?.Id}");
-                            }
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Koшик не знайдено для ShoppingBasketId: {order.ShoppingBasketId}");
-                    }
-                }
-
-                if (ModelState.IsValid)
-                {
-                    try
-                    {
-                        await _context.SaveChangesAsync();
-                        Console.WriteLine("Успішно збережено зміни, включаючи OrderDetails.");
-                    }
-                    catch (DbUpdateException ex)
-                    {
-                        Console.WriteLine($"Помилка при збереженні: {ex.InnerException?.Message}");
-                        return View(order); // Повертаємо вигляд із помилкою
-                    }
-                    return RedirectToAction("OrderConfirmation", new { id = existingOrder.OrderId });
-                }
-
-                ViewData["CustomerEmail"] = new SelectList(_context.Customers, "Email", "Email", order.CustomerEmail);
-                return View(order);
+                existingOrder.FullName = order.FullName;
+                existingOrder.DeliveryCity = order.DeliveryCity;
+                existingOrder.DeliveryStreet = order.DeliveryStreet;
+                existingOrder.DeliveryHouseNumber = order.DeliveryHouseNumber;
+                existingOrder.DeliveryPostalCode = order.DeliveryPostalCode;
+                existingOrder.DeliveryInstructions = order.DeliveryInstructions;
+            }
+            else
+            {
+                existingOrder.CustomerEmail = user.Id;
+                existingOrder.OrderDate = order.OrderDate ?? DateTime.Now;
+                existingOrder.DeliveryAddress = order.DeliveryAddress;
+                existingOrder.OrderStatus = order.OrderStatus;
+                existingOrder.ShoppingBasketId = order.ShoppingBasketId;
+                existingOrder.TotalPrice = order.TotalPrice;
+                existingOrder.FullName = order.FullName;
+                existingOrder.DeliveryCity = order.DeliveryCity;
+                existingOrder.DeliveryStreet = order.DeliveryStreet;
+                existingOrder.DeliveryHouseNumber = order.DeliveryHouseNumber;
+                existingOrder.DeliveryPostalCode = order.DeliveryPostalCode;
+                existingOrder.DeliveryInstructions = order.DeliveryInstructions;
             }
 
-            // GET: Order Confirmation
-            public IActionResult OrderConfirmation(int id)
+            if (order.TotalPrice > 0)
+            {
+                existingOrder.TotalPrice = order.TotalPrice;
+            }
+            else if (order.ShoppingBasketId != null)
+            {
+                var shoppingBasket = await _context.ShoppingBaskets
+                    .Include(sb => sb.ShoppingBasketBooks)
+                    .ThenInclude(i => i.Book)
+                    .FirstOrDefaultAsync(sb => sb.Id == order.ShoppingBasketId);
+
+                if (shoppingBasket != null)
+                {
+                    existingOrder.TotalPrice = shoppingBasket.ShoppingBasketBooks.Sum(i => i.Count * (i.Book?.Price ?? 0m));
+                }
+            }
+
+            if (order.ShoppingBasketId != null)
+            {
+                var shoppingBasket = await _context.ShoppingBaskets
+                    .Include(sb => sb.ShoppingBasketBooks)
+                    .ThenInclude(sbb => sbb.Book)
+                    .FirstOrDefaultAsync(sb => sb.Id == order.ShoppingBasketId);
+
+                if (shoppingBasket != null)
+                {
+                    _context.OrderDetails.RemoveRange(existingOrder.OrderDetails);
+                    foreach (var item in shoppingBasket.ShoppingBasketBooks)
+                    {
+                        if (item.Count > 0 && item.Book != null && item.Book.Id > 0)
+                        {
+                            var orderDetail = new OrderDetail
+                            {
+                                OrderId = existingOrder.OrderId,
+                                BookId = item.Book.Id,
+                                Quantity = item.Count,
+                                TotalPrice = item.Count * item.Book.Price,
+                                Status = "Новий"
+                            };
+                            _context.OrderDetails.Add(orderDetail);
+                        }
+                    }
+                }
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    Console.WriteLine("Спроба зберегти зміни...");
+                    await _context.SaveChangesAsync();
+                    Console.WriteLine("Успішно збережено.");
+
+                    if (User.IsInRole("Admin"))
+                    {
+                        Console.WriteLine("Перенаправлення на Index (Admin).");
+                        return RedirectToAction("Index");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Перенаправлення на OrderConfirmation з ID {existingOrder.OrderId}.");
+                        return RedirectToAction("OrderConfirmation", new { id = existingOrder.OrderId });
+                    }
+                }
+                catch (DbUpdateException ex)
+                {
+                    Console.WriteLine($"Помилка при збереженні: {ex.InnerException?.Message}");
+                    return View(order);
+                }
+            }
+            else
+            {
+                Console.WriteLine("ModelState не валідний:");
+                foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    Console.WriteLine($"Помилка: {error.ErrorMessage}");
+                }
+            }
+
+            ViewData["CustomerEmail"] = new SelectList(_context.Customers, "Email", "Email", order.CustomerEmail);
+            return View(order);
+        }
+
+        // GET: Order Confirmation
+        public IActionResult OrderConfirmation(int id)
             {
                 var order = _context.Orders
                     .Include(o => o.OrderDetails)
@@ -305,9 +335,51 @@
 
                 return View(order);
             }
+        // У OrdersController.cs
+        public async Task<IActionResult> MyOrders()
+        {
+            // Отримуємо email автентифікованого користувача
+            var userEmail = User.Identity?.Name;
+            if (string.IsNullOrEmpty(userEmail))
+            {
+                return RedirectToAction("Login", "Account", new { area = "Identity" });
+            }
 
-            // GET: Orders/Delete/5
-            public async Task<IActionResult> Delete(int? id)
+            // Знаходимо користувача за email
+            var user = await _userManager.FindByEmailAsync(userEmail);
+            if (user == null)
+            {
+                return NotFound("Користувача не знайдено.");
+            }
+
+            // Отримуємо замовлення поточного користувача
+            var orders = await _context.Orders
+                .Where(o => o.CustomerEmail == user.Id) // Фільтруємо за Id користувача
+                .Include(o => o.OrderDetails)
+                .ThenInclude(od => od.Book)
+                .ToListAsync();
+
+            // Об’єднуємо поля адреси в DeliveryAddress
+            foreach (var order in orders)
+            {
+                if (string.IsNullOrEmpty(order.DeliveryAddress))
+                {
+                    var addressParts = new List<string>();
+                    if (!string.IsNullOrEmpty(order.DeliveryCity)) addressParts.Add(order.DeliveryCity);
+                    if (!string.IsNullOrEmpty(order.DeliveryStreet)) addressParts.Add(order.DeliveryStreet);
+                    if (!string.IsNullOrEmpty(order.DeliveryHouseNumber)) addressParts.Add(order.DeliveryHouseNumber);
+                    if (!string.IsNullOrEmpty(order.DeliveryPostalCode)) addressParts.Add(order.DeliveryPostalCode);
+                    if (!string.IsNullOrEmpty(order.DeliveryInstructions)) addressParts.Add(order.DeliveryInstructions);
+
+                    order.DeliveryAddress = addressParts.Any() ? string.Join(", ", addressParts) : "Немає адреси";
+                }
+            }
+
+            return View(orders);
+        }
+
+        // GET: Orders/Delete/5
+        public async Task<IActionResult> Delete(int? id)
             {
                 if (id == null)
                 {
@@ -422,6 +494,7 @@
 
             return View(order);
         }
+
 
         // POST: Orders/Delete/5
         [HttpPost, ActionName("Delete")]

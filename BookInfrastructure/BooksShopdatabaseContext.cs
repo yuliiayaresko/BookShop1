@@ -67,6 +67,7 @@ public partial class BooksShopdatabaseContext : IdentityDbContext<IdentityUser> 
          .HasColumnType("nvarchar(MAX)") 
          .HasColumnName("title");
             entity.Property(e => e.Year).HasColumnName("year");
+
         });
 
         modelBuilder.Entity<Category>(entity =>
@@ -89,7 +90,7 @@ public partial class BooksShopdatabaseContext : IdentityDbContext<IdentityUser> 
             
         });
 
-       
+
 
         modelBuilder.Entity<Order>(entity =>
         {
@@ -106,17 +107,39 @@ public partial class BooksShopdatabaseContext : IdentityDbContext<IdentityUser> 
             entity.Property(e => e.DeliveryAddress)
                 .HasColumnType("text")
                 .HasColumnName("deliveryAddress");
-            entity.Property(e => e.OrderDate).HasColumnName("orderDate");
+            entity.Property(e => e.OrderDate)
+                .HasColumnName("orderDate");
             entity.Property(e => e.OrderStatus)
                 .HasMaxLength(255)
                 .HasColumnName("orderStatus");
-           
-            entity.Property(e => e.ShoppingBasketId).HasColumnName("shoppingBasketId");
+            entity.Property(e => e.ShoppingBasketId)
+                .HasColumnName("shoppingBasketId");
             entity.Property(e => e.TotalPrice)
                 .HasColumnType("decimal(18, 0)")
                 .HasColumnName("totalPrice");
 
-            entity.HasOne(d => d.Customer).WithMany(p => p.Orders)
+            // Додаємо нові поля
+            entity.Property(e => e.FullName)
+                .HasMaxLength(255) // Обмеження довжини, наприклад, 255 символів
+                .HasColumnName("fullName");
+            entity.Property(e => e.DeliveryCity)
+                .HasMaxLength(100) // Місто, наприклад, до 100 символів
+                .HasColumnName("deliveryCity");
+            entity.Property(e => e.DeliveryStreet)
+                .HasMaxLength(150) // Вулиця, наприклад, до 150 символів
+                .HasColumnName("deliveryStreet");
+            entity.Property(e => e.DeliveryHouseNumber)
+                .HasMaxLength(20) // Номер будинку, короткий рядок
+                .HasColumnName("deliveryHouseNumber");
+            entity.Property(e => e.DeliveryPostalCode)
+                .HasMaxLength(10) // Поштовий індекс, наприклад, до 10 символів
+                .HasColumnName("deliveryPostalCode");
+            entity.Property(e => e.DeliveryInstructions)
+                .HasColumnType("text") // Додаткові інструкції, необмежений текст
+                .HasColumnName("deliveryInstructions");
+
+            entity.HasOne(d => d.Customer)
+                .WithMany(p => p.Orders)
                 .HasForeignKey(d => d.CustomerEmail)
                 .HasConstraintName("FK__Order__customer___44FF419A");
         });

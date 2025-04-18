@@ -10,7 +10,7 @@
     <div class="basket-container">
         @foreach (var basket in Model)
         {
-            <div class="basket-card">
+            <div class="basket-card" data-basket-id="@basket.Id">
                 <div class="basket-info">
                     @if (User.IsInRole("Admin"))
                     {
@@ -20,15 +20,12 @@
                     <p><strong>Загальна сума:</strong> <span id="total-price-@basket.Id">@basket.TotalPrice.ToString("C")</span></p>
                 </div>
 
-                
-
-
                 <div class="basket-books">
                     <h4>Книги:</h4>
-                    <ul>
+                    <ul id="books-list-@basket.Id">
                         @foreach (var item in basket.ShoppingBasketBooks)
                         {
-                            <li class="book-item" id="book-item-@item.Book.Id">
+                            <li class="book-item" id="book-item-@item.Book.Id" data-book-id="@item.Book.Id">
                                 <div class="book-info">
                                     <img src="@item.Book.ImagePath" alt="@item.Book.Name" class="book-thumbnail" />
                                     <span class="book-title">@item.Book.Name</span>
@@ -37,27 +34,34 @@
                                     <span class="book-price" id="price-@item.Book.Id" data-unit-price="@item.Book.Price">
                                         @((item.Book.Price * item.Count).ToString("C"))
                                     </span>
-                                    <div class="quantity-control">
-                                        <button class="btn-quantity" onclick="decreaseQuantity(@item.Book.Id, @basket.Id, @item.Book.Price)">-</button>
-                                        <span id="quantity-@item.Book.Id" data-original-count="@item.Count">@item.Count</span>
-                                        <button class="btn-quantity btn-plus" onclick="increaseQuantity(@item.Book.Id, @basket.Id, @item.Book.Price)">+</button>
-                                    </div>
-                                    <button class="btn-remove" onclick="removeBook(@item.Book.Id, @basket.Id, @item.Book.Price * @item.Count)">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                    <form asp-action="UpdateQuantity" method="post" style="display:inline;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="basketId" value="@basket.Id" />
+                                        <input type="hidden" name="bookId" value="@item.Book.Id" />
+                                        <input type="hidden" name="unitPrice" value="@item.Book.Price" />
+                                        <button type="submit" name="action" value="decrease" class="btn-quantity">-</button>
+                                        <span id="quantity-@item.Book.Id">@item.Count</span>
+                                        <button type="submit" name="action" value="increase" class="btn-quantity btn-plus">+</button>
+                                    </form>
+                                    <form asp-action="RemoveBook" method="post" style="display:inline;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="basketId" value="@basket.Id" />
+                                        <input type="hidden" name="bookId" value="@item.Book.Id" />
+                                        <button type="submit" class="btn-remove"><i class="fas fa-trash"></i></button>
+                                    </form>
                                 </div>
                             </li>
                         }
                     </ul>
                 </div>
+
                 @if (User.IsInRole("Customer"))
                 {
-                    <form asp-action="ProceedToCheckout" method="post">
+                    <form asp-action="ProceedToCheckout" method="post" class="checkout-form">
                         <input type="hidden" name="basketId" value="@basket.Id" />
+                        @Html.AntiForgeryToken()
                         <button type="submit" class="btn btn-primary">Оформити замовлення</button>
                     </form>
-                }
-
                 }
             </div>
         }
@@ -108,7 +112,7 @@
     }
 
         .basket-card:hover {
-            transform: scale(1.02);
+           
         }
 
     .basket-info p {
@@ -213,76 +217,12 @@
             transform: scale(1.05);
         }
 
-    .btn-confirm {
-        background-color: var(--dark-purple);
+    .btn-primary {
+        background-color: #6b395b;
         color: white;
-        margin-top: 15px;
-    }
-</style>
-
-<script>
-    function updateTotalPrice(basketId) {
-        
-        let priceElements = document.querySelectorAll(`[id^="price-"]`);
-        let total = 0;
-
-        priceElements.forEach(el => {
-            
-            let priceText = el.textContent.trim();
-            let price = parseFloat(priceText.replace(/[^\d.,]/g, '').replace(',', '.'));
-            total += price;
-        });
-
-        
-        let totalElement = document.getElementById(`total-price-${basketId}`);
-        let currencySymbol = totalElement.textContent.trim().replace(/[\d., ]/g, '');
-        totalElement.textContent = `${currencySymbol} ${total.toFixed(2).replace('.', ',')}`;
     }
 
-    function increaseQuantity(bookId, basketId, unitPrice) {
-        let quantityElement = document.getElementById(`quantity-${bookId}`);
-        let priceElement = document.getElementById(`price-${bookId}`);
-
-        let quantity = parseInt(quantityElement.textContent);
-        quantityElement.textContent = quantity + 1;
-
-        let newQuantity = quantity + 1;
-        let totalPrice = unitPrice * newQuantity;
-
-        let currencySymbol = priceElement.textContent.trim().replace(/[\d., ]/g, '');
-        priceElement.textContent = `${currencySymbol} ${totalPrice.toFixed(2).replace('.', ',')}`;
-
-        // Update the total basket price
-        updateTotalPrice(basketId);
-    }
-
-    function decreaseQuantity(bookId, basketId, unitPrice) {
-        let quantityElement = document.getElementById(`quantity-${bookId}`);
-        let priceElement = document.getElementById(`price-${bookId}`);
-
-        let quantity = parseInt(quantityElement.textContent);
-        if (quantity > 1) {
-            quantityElement.textContent = quantity - 1;
-
-            
-            let newQuantity = quantity - 1;
-            let totalPrice = unitPrice * newQuantity;
-
-            
-            let currencySymbol = priceElement.textContent.trim().replace(/[\d., ]/g, '');
-            priceElement.textContent = `${currencySymbol} ${totalPrice.toFixed(2).replace('.', ',')}`;
-
-            
-            updateTotalPrice(basketId);
+        .btn-primary:hover {
+            background-color: #6b395b;
         }
-    }
-
-    function removeBook(bookId, basketId, bookPrice) {
-       
-        let bookItem = document.getElementById(`book-item-${bookId}`);
-        bookItem.remove();
-
-        
-        updateTotalPrice(basketId);
-    }
-</script>
+</style>

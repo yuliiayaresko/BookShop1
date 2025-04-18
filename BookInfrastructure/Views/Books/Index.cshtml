@@ -7,13 +7,12 @@
 <div class="container">
     <h1>Каталог книг</h1>
 
-    <form method="get">
-        <select name="genre" id="genre" asp-items="ViewBag.Genres">
+    <form method="get" class="filter-form">
+        <select name="genre" id="genre" asp-items="ViewBag.Genres" class="genre-select">
             <option value="">Усі жанри</option>
         </select>
         <button type="submit" class="btn btn-filter">Показати</button>
     </form>
-
 
     @if (User.IsInRole("Admin"))
     {
@@ -21,6 +20,8 @@
             <a asp-action="Create" class="btn btn-add">
                 <i class="bi bi-plus-circle"></i> Додати книгу
             </a>
+            <a class="btn btn-custom-import mb-3" asp-action="Import" asp-controller="Books">Завантажити з файлу</a>
+            <a class="btn btn-custom-export mb-3" asp-action="Export" asp-controller="Books">Експортувати у файл</a>
         </p>
     }
 
@@ -37,19 +38,21 @@
                 <div class="book-actions">
                     <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-details">Деталі</a>
 
-
                     @if (User.IsInRole("Admin"))
                     {
                         <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-edit">Редагувати</a>
                         <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-delete">Видалити</a>
                     }
 
-                    <form asp-controller="ShoppingBaskets" asp-action="AddToBasket" method="post" style="display:inline;">
-                        <input type="hidden" name="bookId" value="@item.Id" />
-                        <button type="submit" class="btn btn-cart">
-                            <i class="bi bi-cart-plus"></i> Додати у кошик
-                        </button>
-                    </form>
+                    @if (!User.IsInRole("Admin")) // Обмеження для не-адмінів
+                    {
+                        <form asp-controller="ShoppingBaskets" asp-action="AddToBasket" method="post" style="display:inline;">
+                            <input type="hidden" name="bookId" value="@item.Id" />
+                            <button type="submit" class="btn btn-cart">
+                                <i class="bi bi-cart-plus"></i> Додати у кошик
+                            </button>
+                        </form>
+                    }
                 </div>
             </div>
         }
@@ -57,7 +60,7 @@
 </div>
 
 <style>
-    /* Основні кольори */
+   
     :root {
         --dark-brown: #493129;
         --purple: #8b597b;
@@ -87,6 +90,30 @@
         margin-bottom: 20px;
     }
 
+    .filter-form {
+        display: flex;
+        justify-content: plenary;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .genre-select {
+        padding: 8px 15px;
+        font-size: 1rem;
+        border-radius: 5px;
+        border: 2px solid var(--purple);
+        background-color: var(--cream);
+        color: var(--dark-brown);
+        transition: border-color 0.3s, background-color 0.3s;
+    }
+
+        .genre-select:hover, .genre-select:focus {
+            border-color: var(--pink);
+            background-color: var(--peach);
+            outline: none;
+        }
+
     .book-container {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -99,12 +126,13 @@
         border-radius: 15px;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
         text-align: center;
-        transition: transform 0.3s;
+        /* Видалено transition: transform 0.3s */
     }
 
-        .book-card:hover {
+    /* Видалено ефект наведення */
+    /* .book-card:hover {
             transform: scale(1.05);
-        }
+        } */
 
     .book-foto img {
         width: 100%;
@@ -181,9 +209,33 @@
         padding: 8px 15px;
         border-radius: 5px;
         cursor: pointer;
+        transition: background-color 0.3s, transform 0.2s;
     }
 
         .btn-filter:hover {
             background-color: var(--dark-brown);
+            transform: scale(1.1);
+        }
+
+    .btn-cart {
+        background-color: var(--pink);
+        color: white;
+    }
+
+    /* Нові класи для кнопок імпорту та експорту */
+    .btn-custom-import, .btn-custom-export {
+        background-color: var(--pink);
+        color: white;
+        padding: 10px 20px;
+        font-size: 1.2rem;
+        border-radius: 8px;
+        margin: 5px;
+        text-decoration: none;
+        transition: background 0.3s, transform 0.2s;
+    }
+
+        .btn-custom-import:hover, .btn-custom-export:hover {
+            background-color: #e08b87; /* Темніший відтінок --pink */
+            transform: scale(1.1);
         }
 </style>

@@ -1,0 +1,304 @@
+﻿@model List<BookDomain.Model.Order>
+
+@{
+    ViewData["Title"] = "Мої замовлення";
+}
+
+<div class="container">
+    @if (!Model.Any())
+    {
+        <div class="no-orders">
+            <p>У вас поки немає замовлень.</p>
+        </div>
+    }
+    else
+    {
+        <div class="orders-section">
+            <h1>Активні замовлення</h1>
+            <div class="order-list">
+                @foreach (var order in Model.Where(o => o.OrderStatus != "Доставлено").OrderByDescending(o => o.OrderDate))
+                {
+                    <div class="order-card">
+                        <div class="order-header @(order.OrderStatus == "Нове" ? "new-order" : "processing-order")">
+                            <div class="order-info">
+                                <span class="order-field">№ @order.OrderId</span>
+                                <span class="order-field">Статус: @order.OrderStatus</span>
+                            </div>
+                            <button class="toggle-details">Деталі <i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div class="order-details">
+                            <table class="items-table">
+                                <tbody>
+                                    @if (order.OrderDetails != null && order.OrderDetails.Any())
+                                    {
+                                        foreach (var detail in order.OrderDetails)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    @if (!string.IsNullOrEmpty(detail.Book?.ImagePath))
+                                                    {
+                                                        <img src="@detail.Book.ImagePath" alt="@detail.Book.Name" class="book-cover" />
+                                                        <div class="book-title">@detail.Book.Name</div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span>Немає обкладинки</span>
+                                                        <div class="book-title">@detail.Book.Name</div>
+                                                    }
+                                                </td>
+                                                <td>@detail.Book?.AuthorName</td>
+                                                <td>@($"{detail.Book?.Price ?? 0} ₴")</td>
+                                                <td>@detail.Quantity</td>
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td colspan="4">Немає деталей замовлення</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <h1>Архів замовлень (Доставлені)</h1>
+            <div class="order-list">
+                @foreach (var order in Model.Where(o => o.OrderStatus == "Доставлено").OrderByDescending(o => o.OrderDate))
+                {
+                    <div class="order-card">
+                        <div class="order-header delivered-order">
+                            <div class="order-info">
+                                <span class="order-field">№ @order.OrderId</span>
+                                <span class="order-field">@order.OrderStatus</span>
+                            </div>
+                            <button class="toggle-details">Деталі <i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div class="order-details">
+                            <table class="items-table">
+                                <tbody>
+                                    @if (order.OrderDetails != null && order.OrderDetails.Any())
+                                    {
+                                        foreach (var detail in order.OrderDetails)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    @if (!string.IsNullOrEmpty(detail.Book?.ImagePath))
+                                                    {
+                                                        <img src="@detail.Book.ImagePath" alt="@detail.Book.Name" class="book-cover" />
+                                                        <div class="book-title">@detail.Book.Name</div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span>Немає обкладинки</span>
+                                                        <div class="book-title">@detail.Book.Name</div>
+                                                    }
+                                                </td>
+                                                <td>@detail.Book?.AuthorName</td>
+                                                <td>@($"{detail.Book?.Price ?? 0} ₴")</td>
+                                                <td>@detail.Quantity</td>
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td colspan="4">Немає деталей замовлення</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    <a href="@Url.Action("Index", "Home")" class="btn btn-home">Повернутись на головну</a>
+</div>
+
+<style>
+    :root {
+        --dark-brown: #493129;
+        --purple: #8b597b;
+        --pink: #efa3a0;
+        --peach: #ffdec7;
+        --cream: #ffede0;
+    }
+
+    body {
+        background-color: var(--cream);
+        font-family: 'Arial', sans-serif;
+        margin: 0;
+        padding: 0;
+        color: var(--dark-brown);
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    h1 {
+        color: var(--dark-brown);
+        font-size: 2rem;
+        margin: 30px 0 15px;
+        text-align: left;
+    }
+
+    .orders-section {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .order-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .order-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        transition: background-color 0.3s;
+    }
+
+    .order-info {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+    }
+
+    .new-order {
+        background-color: var(--pink);
+    }
+
+    .processing-order {
+        background-color: var(--peach);
+    }
+
+    .delivered-order {
+        background-color: var(--cream);
+    }
+
+    .order-field {
+        font-size: 1rem;
+        padding: 5px;
+    }
+
+    .toggle-details {
+        background: none;
+        border: 1px solid var(--purple);
+        color: var(--purple);
+        font-size: 1rem;
+        padding: 5px 10px;
+        border-radius: 5px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        transition: transform 0.3s, background-color 0.3s;
+    }
+
+        .toggle-details:hover {
+            background-color: var(--purple);
+            color: white;
+        }
+
+    .order-card.active .toggle-details i {
+        transform: rotate(180deg);
+    }
+
+    .order-details {
+        display: none;
+        padding: 15px;
+        background-color: var(--cream);
+    }
+
+    .order-card.active .order-details {
+        display: block;
+    }
+
+    .items-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .items-table td {
+            border: 1px solid var(--peach);
+            padding: 10px;
+            text-align: center;
+        }
+
+    .book-cover {
+        max-width: 100px;
+        height: auto;
+        display: block;
+        margin: 0 auto 5px;
+    }
+
+    .book-title {
+        font-size: 0.9rem;
+        color: var(--dark-brown);
+    }
+
+    .no-orders {
+        text-align: center;
+        font-size: 18px;
+        color: var(--dark-brown);
+        margin: 20px 0;
+    }
+
+    .btn {
+        display: inline-block;
+        padding: 8px 15px;
+        text-decoration: none;
+        border-radius: 5px;
+        font-size: 1rem;
+        transition: background 0.3s, transform 0.2s;
+    }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+    .btn-home {
+        background-color: var(--purple);
+        color: white;
+        padding: 10px 20px;
+        margin-top: 20px;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.order-header').forEach(header => {
+            header.addEventListener('click', (e) => {
+                if (!e.target.closest('.toggle-details')) {
+                    const card = header.parentElement;
+                    card.classList.toggle('active');
+                }
+            });
+        });
+
+        document.querySelectorAll('.toggle-details').forEach(button => {
+            button.addEventListener('click', () => {
+                const card = button.closest('.order-card');
+                card.classList.toggle('active');
+            });
+        });
+    });
+</script>

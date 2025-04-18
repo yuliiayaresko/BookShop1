@@ -3,16 +3,26 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] Loring</title>
+    <title>@ViewData["Title"] - Loring</title>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/BookInfrastructure.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 
     <style>
+        /* Основні кольори */
+        :root {
+            --dark-brown: #493129;
+            --purple: #8b597b;
+            --pink: #efa3a0;
+            --peach: #ffdec7;
+            --cream: #ffede0;
+        }
+
         nav.navbar {
-            background-color: #8b597b !important;
+            background-color: var(--purple) !important;
         }
 
             nav.navbar .navbar-nav .nav-link {
@@ -20,12 +30,11 @@
             }
 
                 nav.navbar .navbar-nav .nav-link:hover {
-                    color: #ffd6c7 !important;
+                    color: var(--peach) !important;
                 }
 
-        /* Колір тексту в випадаючому списку */
         .dropdown-menu {
-            background-color: #8b597b !important;
+            background-color: var(--purple) !important;
         }
 
             .dropdown-menu .dropdown-item {
@@ -33,10 +42,28 @@
             }
 
                 .dropdown-menu .dropdown-item:hover {
-                    background-color: #493129 !important;
+                    background-color: var(--dark-brown) !important;
                 }
 
-        /* Покращена адаптивність для кнопок */
+        .navbar-brand {
+            font-family: 'Dancing Script', cursive;
+            font-size: 2rem;
+            color: white !important;
+            display: flex;
+            align-items: center;
+            transition: transform 0.3s;
+        }
+
+            .navbar-brand:hover {
+                color: var(--pink) !important;
+                transform: scale(1.05);
+            }
+
+            .navbar-brand i {
+                margin-left: 5px;
+                color: var(--pink);
+            }
+
         .navbar-nav {
             text-align: center;
         }
@@ -46,7 +73,6 @@
                 padding-right: 0;
             }
 
-        /* Align the login/Logout section */
         .user-actions {
             display: flex;
             align-items: center;
@@ -56,15 +82,66 @@
                 margin-left: 10px;
             }
 
-        /* Hide "Manage Genres" link for customers */
-       
-            .admin-link
-
-        {
+        .admin-link {
             display: none;
         }
 
+        /* Стилі для футера */
+        footer {
+            background-color: var(--purple);
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            margin-top: 40px;
         }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: auto;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            align-items: flex-start;
+        }
+
+            .footer-content a {
+                color: white; /* Усі посилання білі */
+                text-decoration: none;
+                margin: 5px;
+                transition: color 0.3s;
+            }
+
+                .footer-content a:hover {
+                    color: var(--pink); /* При наведенні рожевий */
+                }
+
+            .footer-content i {
+                margin-right: 5px;
+            }
+
+        .social-links a {
+            font-size: 1.2rem;
+            margin: 0 10px;
+        }
+
+        .contact-info p {
+            color: white; /* Текст пошти і телефону білий */
+        }
+
+        .about-us {
+            max-width: 300px;
+            font-family: 'Dancing Script', cursive; /* Гарний шрифт */
+            font-size: 1.2rem; /* Збільшуємо розмір для краси */
+        }
+
+            .about-us p {
+                margin: 5px 0;
+            }
+
+            .about-us i {
+                color: var(--pink); /* Сердечка рожеві */
+                margin: 0 5px;
+            }
     </style>
 </head>
 
@@ -72,7 +149,9 @@
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Loring</a>
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    Loring <i class="bi bi-heart-fill"></i>
+                </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -80,11 +159,6 @@
 
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-
-                        <!-- Умовно показуємо кнопку "Управління жанрами" тільки для адміністратора -->
                         @if (User.Identity.IsAuthenticated && User.IsInRole("Admin"))
                         {
                             <li class="nav-item">
@@ -95,6 +169,15 @@
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-area="" asp-controller="Orders" asp-action="Index">
                                     Замовлення користувачів
+                                </a>
+                            </li>
+                            
+                        }
+                        @if (User.Identity.IsAuthenticated && !User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Orders" asp-action="MyOrders">
+                                    <i class="bi bi-list-check"></i> Мої замовлення
                                 </a>
                             </li>
                         }
@@ -124,7 +207,6 @@
                             </a>
                         </li>
 
-                        <!-- User authentication section -->
                         <li class="nav-item user-actions">
                             @if (User.Identity.IsAuthenticated)
                             {
@@ -138,10 +220,6 @@
                                 </a>
                             }
                         </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
                     </ul>
                 </div>
             </div>
@@ -153,6 +231,33 @@
             @RenderBody()
         </main>
     </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="about-us">
+                <p><strong>Про нас:</strong></p>
+                <p>Ми <i class="bi bi-heart-fill"></i> Loring — місце, де книги знаходять своїх читачів.</p>
+                <p>З любов’ю до літератури та вас</p>
+            </div>
+            <div class="contact-info">
+                <p>
+                    <i class="bi bi-envelope"></i>
+                    <a href="mailto:support@loring.com">support@loring.com</a>
+                </p>
+                <p>
+                    <i class="bi bi-telephone"></i> +380 (123) 456-78-90
+                </p>
+            </div>
+            <div class="social-links">
+                <a href="https://www.tiktok.com" target="_blank">
+                    <i class="bi bi-tiktok"></i> TikTok
+                </a>
+                <a href="https://www.instagram.com/loring_books" target="_blank">
+                    <i class="bi bi-instagram"></i> Instagram
+                </a>
+            </div>
+        </div>
+    </footer>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

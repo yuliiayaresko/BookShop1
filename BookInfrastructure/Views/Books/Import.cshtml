@@ -1,0 +1,148 @@
+﻿<div class="container">
+    <h3>Оберіть Excel-файл для імпорту книг</h3>
+    @using (Html.BeginForm("Import", "Books", FormMethod.Post, new { enctype = "multipart/form-data" }))
+    {
+        <div class="import-form">
+            <label for="fileExcel">Завантажте Excel-файл:</label>
+            <input type="file" name="fileExcel" id="fileExcel" class="form-control"
+                   data-default-text="Виберіть файл" data-empty-text="Файл не вибрано" />
+            <div class="book-actions">
+                <input type="submit" value="Завантажити" class="btn btn-add mt-2" />
+            </div>
+            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        </div>
+    }
+</div>
+
+<style>
+    /* Основні кольори */
+    :root {
+        --dark-brown: #493129;
+        --purple: #8b597b;
+        --pink: #efa3a0;
+        --peach: #ffdec7;
+        --cream: #ffede0;
+    }
+
+    body {
+        background-color: var(--cream);
+        font-family: 'Arial', sans-serif;
+        margin: 0;
+        padding: 0;
+        color: var(--dark-brown);
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: auto;
+        padding: 20px;
+        text-align: center;
+    }
+
+    h3 {
+        color: var(--dark-brown);
+        font-size: 1.8rem; /* Трохи менший заголовок, ніж h1 */
+        margin-bottom: 20px;
+        text-transform: uppercase;
+    }
+
+    .import-form {
+        background: var(--peach);
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        display: inline-block;
+        text-align: left;
+    }
+
+    .form-control {
+        display: block;
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid var(--purple);
+        border-radius: 5px;
+        background-color: var(--cream);
+        color: var(--dark-brown);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .form-control::after {
+            content: attr(data-default-text);
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--purple);
+            pointer-events: none;
+        }
+
+        .form-control:valid::after,
+        .form-control:focus::after {
+            content: attr(data-default-text);
+            color: transparent;
+        }
+
+        .form-control:not(:placeholder-shown):not(:focus):invalid::after {
+            content: attr(data-empty-text);
+            color: var(--purple);
+        }
+
+    .book-actions {
+        margin-top: 15px;
+        text-align: center;
+    }
+
+    .btn {
+        display: inline-block;
+        padding: 8px 15px;
+        margin: 5px;
+        text-decoration: none;
+        border-radius: 5px;
+        font-size: 1rem;
+        transition: background 0.3s, transform 0.2s;
+        border: none;
+        cursor: pointer;
+        text-transform: uppercase;
+    }
+
+        .btn:hover {
+            transform: scale(1.1);
+        }
+
+    .btn-add {
+        background-color: var(--pink);
+        color: white;
+        padding: 10px 20px;
+        font-size: 1.2rem;
+        border-radius: 8px;
+    }
+
+    .text-danger {
+        color: #dc3545; /* Червоний колір для помилок, можна налаштувати */
+        margin-top: 10px;
+    }
+
+    /* Додатковий стиль для label */
+    label {
+        font-size: 1.1rem;
+        color: var(--purple);
+        margin-bottom: 5px;
+        display: block;
+        text-transform: uppercase;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const fileInput = document.getElementById('fileExcel');
+        fileInput.addEventListener('change', function () {
+            if (this.files.length > 0) {
+                this.setCustomValidity('');
+            } else {
+                this.setCustomValidity('Файл не вибрано');
+            }
+        });
+    });
+</script>

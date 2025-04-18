@@ -20,8 +20,13 @@ public partial class Order
     public string? OrderStatus { get; set; }
 
     public int? ShoppingBasketId { get; set; }
-    
-    
+    public string? FullName { get; set; }
+    public string? DeliveryCity { get; set; }       // Місто
+    public string? DeliveryStreet { get; set; }     // Вулиця
+    public string? DeliveryHouseNumber { get; set; } // Номер будинку
+    public string? DeliveryPostalCode { get; set; } // Поштовий індекс
+    public string? DeliveryInstructions { get; set; } // Додаткові інструкції (необов’язково)
+
 
     public virtual Customer? Customer { get; set; }
 

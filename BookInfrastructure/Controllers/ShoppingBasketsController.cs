@@ -80,22 +80,60 @@ namespace BookInfrastructure.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateQuantity(int basketId, int bookId, decimal unitPrice, string action)
+        {
+            var basket = await _context.ShoppingBaskets
+                .Include(sb => sb.ShoppingBasketBooks)
+                .ThenInclude(sbb => sbb.Book)
+                .FirstOrDefaultAsync(sb => sb.Id == basketId);
+
+            if (basket == null)
+            {
+                return NotFound("Кошик не знайдено");
+            }
+
+            var item = basket.ShoppingBasketBooks.FirstOrDefault(sbb => sbb.BookId == bookId);
+            if (item != null)
+            {
+                if (action == "increase")
+                {
+                    item.Count++;
+                }
+                else if (action == "decrease" && item.Count > 1)
+                {
+                    item.Count--;
+                }
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        // POST: Видалення книги
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> RemoveBook(int basketId, int bookId)
         {
             var basket = await _context.ShoppingBaskets
-                .Include(b => b.ShoppingBasketBooks)
-                .FirstOrDefaultAsync(b => b.Id == basketId);
+                .Include(sb => sb.ShoppingBasketBooks)
+                .ThenInclude(sbb => sbb.Book)
+                .FirstOrDefaultAsync(sb => sb.Id == basketId);
 
-            var item = basket?.ShoppingBasketBooks.FirstOrDefault(i => i.BookId == bookId);
+            if (basket == null)
+            {
+                return NotFound("Кошик не знайдено");
+            }
+
+            var item = basket.ShoppingBasketBooks.FirstOrDefault(sbb => sbb.BookId == bookId);
             if (item != null)
             {
                 _context.ShoppingBasketBooks.Remove(item);
                 await _context.SaveChangesAsync();
             }
 
-            return RedirectToAction("ShoppingBaskets"); // Перенаправлення назад до кошиків
+            return RedirectToAction(nameof(Index));
         }
-
 
         // GET: ShoppingBaskets/Details/5
         public async Task<IActionResult> Details(int? id)

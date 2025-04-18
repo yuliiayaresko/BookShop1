@@ -8,16 +8,19 @@ using Microsoft.EntityFrameworkCore;
 using BookDomain.Model;
 using BookInfrastructure;
 using Microsoft.AspNetCore.Authorization;
+using BookInfrastructure.Services;
 
 namespace BookInfrastructure.Controllers
 {
     public class BooksController : Controller
     {
         private readonly BooksShopdatabaseContext _context;
+        private readonly IDataPortServiceFactory<Book> _dataPortServiceFactory;
 
-        public BooksController(BooksShopdatabaseContext context)
+        public BooksController(BooksShopdatabaseContext context, IDataPortServiceFactory<Book> dataPortServiceFactory)
         {
             _context = context;
+            _dataPortServiceFactory = dataPortServiceFactory;
         }
 
         // GET: Books
@@ -218,6 +221,51 @@ namespace BookInfrastructure.Controllers
             }
 
             return View(book);
+        }
+
+
+        [Authorize(Roles = "Admin")]
+        public IActionResult Import()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Import(IFormFile fileExcel, CancellationToken cancellationToken)
+        {
+            if (fileExcel == null || fileExcel.Length == 0)
+            {
+                ModelState.AddModelError("", "Будь ласка, виберіть файл Excel.");
+                return View();
+            }
+
+            using (var stream = fileExcel.OpenReadStream())
+            {
+                var importService = _dataPortServiceFactory.GetImportService(fileExcel.ContentType);
+                await importService.ImportFromStreamAsync(stream, cancellationToken);
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Export(string contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    CancellationToken cancellationToken = default)
+        {
+            var exportService = _dataPortServiceFactory.GetExportService(contentType);
+            var memoryStream = new MemoryStream();
+
+            await exportService.WriteToAsync(memoryStream, cancellationToken);
+            await memoryStream.FlushAsync(cancellationToken);
+            memoryStream.Position = 0;
+
+            return new FileStreamResult(memoryStream, contentType)
+            {
+                FileDownloadName = $"books_{DateTime.UtcNow.ToShortDateString()}.xlsx"
+            };
         }
 
         // POST: Books/Delete/5

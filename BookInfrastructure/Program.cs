@@ -1,9 +1,11 @@
 using BookDomain.Model;
 using BookInfrastructure;
+using BookInfrastructure.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddScoped<IDataPortServiceFactory<Book>, BookDataPortServiceFactory>();
 
 // Додаємо MVC та Razor Pages
 builder.Services.AddControllersWithViews();
